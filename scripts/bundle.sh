@@ -37,6 +37,8 @@ cat > "$TEMP_PLIST" << 'EOF'
     <string>14.0</string>
     <key>NSHighResolutionCapable</key>
     <true/>
+    <key>NSPrincipalClass</key>
+    <string>NSApplication</string>
     <key>NSUserNotificationAlertStyle</key>
     <string>alert</string>
 </dict>
