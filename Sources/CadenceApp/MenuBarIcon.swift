@@ -53,7 +53,7 @@ struct MenuBarIcon: View {
                 // Top half - stroked
                 let topPath = NSBezierPath()
                 topPath.appendArc(withCenter: center, radius: radius,
-                                 startAngle: 0, endAngle: 180, clockwise: true)
+                                 startAngle: 0, endAngle: 180, clockwise: false)
                 topPath.lineWidth = DrawingConstants.mediumLineWidth
                 topPath.stroke()
 
