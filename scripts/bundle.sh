@@ -1,5 +1,6 @@
 #!/bin/bash
 # Build Cadence.app bundle from SwiftPM executable
+# This embeds Info.plist into the binary for proper macOS app behavior
 
 set -euo pipefail
 
@@ -9,19 +10,9 @@ BUILD_DIR="$PROJECT_DIR/.build/release"
 APP_NAME="Cadence"
 APP_BUNDLE="$PROJECT_DIR/$APP_NAME.app"
 
-echo "Building release..."
-swift build -c release --package-path "$PROJECT_DIR"
-
-echo "Creating app bundle..."
-rm -rf "$APP_BUNDLE"
-mkdir -p "$APP_BUNDLE/Contents/MacOS"
-mkdir -p "$APP_BUNDLE/Contents/Resources"
-
-# Copy executable
-cp "$BUILD_DIR/$APP_NAME" "$APP_BUNDLE/Contents/MacOS/"
-
-# Create Info.plist
-cat > "$APP_BUNDLE/Contents/Info.plist" << 'EOF'
+# Create Info.plist in a temp location
+TEMP_PLIST="/tmp/Cadence_Info.plist"
+cat > "$TEMP_PLIST" << 'EOF'
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -52,9 +43,38 @@ cat > "$APP_BUNDLE/Contents/Info.plist" << 'EOF'
 </plist>
 EOF
 
+echo "Building release with embedded plist..."
+# Build with the Info.plist embedded as a section in the binary
+swift build -c release --package-path "$PROJECT_DIR" -Xlinker -sectcreate -Xlinker __TEXT -Xlinker __info_plist -Xlinker "$TEMP_PLIST"
+
+echo "Creating app bundle..."
+rm -rf "$APP_BUNDLE"
+mkdir -p "$APP_BUNDLE/Contents/MacOS"
+mkdir -p "$APP_BUNDLE/Contents/Resources"
+
+# Copy executable
+cp "$BUILD_DIR/$APP_NAME" "$APP_BUNDLE/Contents/MacOS/"
+
+# Copy Info.plist to bundle as well (for app discovery)
+cp "$TEMP_PLIST" "$APP_BUNDLE/Contents/Info.plist"
+
 echo "Signing app..."
-# Ad-hoc sign the app
-codesign --force --deep --sign - "$APP_BUNDLE"
+# Ad-hoc sign the app with entitlements for notifications
+cat > /tmp/Cadence.entitlements << 'ENTEOF'
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>com.apple.security.automation.apple-events</key>
+    <true/>
+</dict>
+</plist>
+ENTEOF
+
+codesign --force --deep --sign - --entitlements /tmp/Cadence.entitlements "$APP_BUNDLE"
+
+# Clean up
+rm -f "$TEMP_PLIST" /tmp/Cadence.entitlements
 
 echo "Done: $APP_BUNDLE"
 echo "Run with: open $APP_BUNDLE"

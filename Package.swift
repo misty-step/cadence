@@ -7,13 +7,13 @@ let package = Package(
         .macOS(.v14)
     ],
     products: [
-        .executable(name: "Cadence", targets: ["Cadence"])
+        .executable(name: "Cadence", targets: ["CadenceApp"])
     ],
     dependencies: [],
     targets: [
         .executableTarget(
-            name: "Cadence",
-            path: "Sources/Cadence"
+            name: "CadenceApp",
+            path: "Sources/CadenceApp"
         )
     ]
 )
