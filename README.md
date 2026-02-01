@@ -1,6 +1,18 @@
 # Cadence
 
-A macOS-native Pomodoro timer that does one thing exceptionally well.
+> The natural rhythm of focused work.
+
+A macOS menu bar Pomodoro timer that does one thing exceptionally well.
+
+## Philosophy
+
+Opinionated defaults over configuration. The Pomodoro technique works:
+
+- **Focus:** 25 minutes
+- **Short break:** 5 minutes  
+- **Long break:** 15 minutes (after 4 focus sessions)
+
+These values are not configurable. They're correct.
 
 ## Install
 
@@ -13,15 +25,19 @@ Requires macOS 14+.
 
 ## Usage
 
-Click the menu bar icon to see the timer. Press Space or click Start to begin.
+Click the circle in your menu bar. Press Start. Focus.
 
-**Cycle:**
-- Focus: 25 minutes
-- Short Break: 5 minutes (after each focus)
-- Long Break: 15 minutes (after 4 focus sessions)
+## Design
 
-No settings. No configuration. Just the rhythm of focused work.
+- Native Swift + SwiftUI
+- Menu bar only (no dock icon)
+- Gentle notifications
+- ~50KB binary
 
 ## License
 
-MIT
+MIT © [Misty Step](https://github.com/misty-step)
+
+---
+
+*Less, but better.*
