@@ -23,6 +23,18 @@ open Cadence.app
 
 Requires macOS 14+.
 
+### Permanent Installation
+
+```bash
+# Install to Applications
+./scripts/bundle.sh
+# May require sudo on standard macOS installs
+sudo cp -R Cadence.app /Applications/
+
+# Optional: Auto-start on login
+osascript -e 'tell application "System Events" to make login item at end with properties {path:"/Applications/Cadence.app", hidden:false}'
+```
+
 ## Usage
 
 Click the circle in your menu bar. Press Start. Focus.

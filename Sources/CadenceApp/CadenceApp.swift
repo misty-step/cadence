@@ -12,8 +12,7 @@ struct CadenceApp: App {
                     notificationManager.requestAuthorizationIfNeeded()
                 }
         } label: {
-            Image(systemName: timerState.isRunning ? "circle.fill" : "circle")
-                .foregroundStyle(timerState.currentPhase.isFocus ? .red : .green)
+            MenuBarIcon(phase: timerState.currentPhase, isRunning: timerState.isRunning)
         }
         .menuBarExtraStyle(.window)
     }
