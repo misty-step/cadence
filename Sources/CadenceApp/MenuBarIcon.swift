@@ -5,18 +5,27 @@ struct MenuBarIcon: View {
     let phase: TimerState.Phase
     let isRunning: Bool
 
+    private enum DrawingConstants {
+        static let iconSize: CGFloat = 18
+        static let inset: CGFloat = 2
+        static let regularLineWidth: CGFloat = 2
+        static let mediumLineWidth: CGFloat = 1.5
+        static let thinLineWidth: CGFloat = 1
+        static let runningDashPattern: [CGFloat] = [3, 2]
+        static let pausedDashPattern: [CGFloat] = [2, 2]
+    }
+
     var body: some View {
         Image(nsImage: createIcon())
     }
 
     private func createIcon() -> NSImage {
-        let size = NSSize(width: 18, height: 18)
+        let size = NSSize(width: DrawingConstants.iconSize, height: DrawingConstants.iconSize)
         let image = NSImage(size: size, flipped: false) { rect in
             NSColor.black.setFill()
             NSColor.black.setStroke()
 
-            let inset: CGFloat = 2
-            let circleRect = rect.insetBy(dx: inset, dy: inset)
+            let circleRect = rect.insetBy(dx: DrawingConstants.inset, dy: DrawingConstants.inset)
             let center = NSPoint(x: rect.midX, y: rect.midY)
             let radius = circleRect.width / 2
 
@@ -28,7 +37,7 @@ struct MenuBarIcon: View {
             case (.focus, false):
                 // Hollow circle outline
                 let path = NSBezierPath(ovalIn: circleRect)
-                path.lineWidth = 2
+                path.lineWidth = DrawingConstants.regularLineWidth
                 path.stroke()
 
             case (.shortBreak, true):
@@ -45,27 +54,27 @@ struct MenuBarIcon: View {
                 let topPath = NSBezierPath()
                 topPath.appendArc(withCenter: center, radius: radius,
                                  startAngle: 0, endAngle: 180, clockwise: true)
-                topPath.lineWidth = 1.5
+                topPath.lineWidth = DrawingConstants.mediumLineWidth
                 topPath.stroke()
 
             case (.shortBreak, false):
                 // Full circle outline only (no fill)
                 let path = NSBezierPath(ovalIn: circleRect)
-                path.lineWidth = 1.5
+                path.lineWidth = DrawingConstants.mediumLineWidth
                 path.stroke()
 
             case (.longBreak, true):
                 // Dashed circle outline
                 let path = NSBezierPath(ovalIn: circleRect)
-                path.lineWidth = 2
-                path.setLineDash([3, 2], count: 2, phase: 0)
+                path.lineWidth = DrawingConstants.regularLineWidth
+                path.setLineDash(DrawingConstants.runningDashPattern, count: 2, phase: 0)
                 path.stroke()
 
             case (.longBreak, false):
                 // Thinner dashed circle
                 let path = NSBezierPath(ovalIn: circleRect)
-                path.lineWidth = 1
-                path.setLineDash([2, 2], count: 2, phase: 0)
+                path.lineWidth = DrawingConstants.thinLineWidth
+                path.setLineDash(DrawingConstants.pausedDashPattern, count: 2, phase: 0)
                 path.stroke()
             }
             return true

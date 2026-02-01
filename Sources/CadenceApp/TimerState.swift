@@ -79,6 +79,12 @@ final class TimerState {
     var secondsRemaining: Int = Phase.focus.duration
     var isRunning: Bool = false
     var completedFocusSessions: Int = 0
+    var displayCompletedSessions: Int {
+        if currentPhase == .longBreak {
+            return 4
+        }
+        return completedFocusSessions
+    }
 
     var totalSeconds: Int { currentPhase.duration }
     var progress: Double {

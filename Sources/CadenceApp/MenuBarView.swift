@@ -13,7 +13,7 @@ struct MenuBarView: View {
             HStack(spacing: 4) {
                 ForEach(0..<4, id: \.self) { index in
                     Circle()
-                        .fill(index < timerState.completedFocusSessions ? Color.primary : Color.secondary.opacity(0.3))
+                        .fill(index < timerState.displayCompletedSessions ? Color.primary : Color.secondary.opacity(0.3))
                         .frame(width: 6, height: 6)
                 }
             }

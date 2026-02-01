@@ -28,7 +28,8 @@ Requires macOS 14+.
 ```bash
 # Install to Applications
 ./scripts/bundle.sh
-cp -R Cadence.app /Applications/
+# May require sudo on standard macOS installs
+sudo cp -R Cadence.app /Applications/
 
 # Optional: Auto-start on login
 osascript -e 'tell application "System Events" to make login item at end with properties {path:"/Applications/Cadence.app", hidden:false}'
