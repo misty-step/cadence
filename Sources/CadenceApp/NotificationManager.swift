@@ -1,11 +1,16 @@
+import AppKit
 import Foundation
 import UserNotifications
 
 @MainActor
 final class NotificationManager {
-    private let center = UNUserNotificationCenter.current()
+    private var center: UNUserNotificationCenter? {
+        guard Bundle.main.bundleIdentifier != nil else { return nil }
+        return UNUserNotificationCenter.current()
+    }
 
     func requestAuthorizationIfNeeded() {
+        guard let center = center else { return }
         Task {
             let settings = await center.notificationSettings()
             if settings.authorizationStatus == .notDetermined {
@@ -15,9 +20,12 @@ final class NotificationManager {
     }
 
     func notify(phase: TimerState.Phase) {
+        NSSound(named: NSSound.Name(phase.systemSound))?.play()
+
+        guard let center = center else { return }
         let content = UNMutableNotificationContent()
         content.title = phase.name
-        content.body = phase.isFocus ? "Time to focus." : "Time for a break."
+        content.body = phase.notificationBody
         content.sound = .default
 
         let request = UNNotificationRequest(

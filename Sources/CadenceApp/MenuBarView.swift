@@ -10,6 +10,14 @@ struct MenuBarView: View {
             Text(timerState.currentPhase.name)
                 .font(.headline)
 
+            HStack(spacing: 4) {
+                ForEach(0..<4, id: \.self) { index in
+                    Circle()
+                        .fill(index < timerState.completedFocusSessions ? Color.primary : Color.secondary.opacity(0.3))
+                        .frame(width: 6, height: 6)
+                }
+            }
+
             Text(timeString(timerState.secondsRemaining))
                 .font(.system(size: 32, weight: .semibold, design: .monospaced))
 
@@ -19,6 +27,15 @@ struct MenuBarView: View {
             .keyboardShortcut(.space, modifiers: [])
             .buttonStyle(.borderedProminent)
             .controlSize(.large)
+
+#if DEBUG
+            Button("Skip Phase") {
+                timerState.skipPhase(notificationManager: notificationManager)
+            }
+            .keyboardShortcut("s", modifiers: [.option])
+            .buttonStyle(.plain)
+            .foregroundStyle(.secondary)
+#endif
 
             Divider()
 

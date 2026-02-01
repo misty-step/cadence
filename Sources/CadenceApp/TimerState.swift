@@ -1,5 +1,7 @@
+import AppKit
 import Foundation
 import Observation
+import SwiftUI
 
 @MainActor
 @Observable
@@ -31,6 +33,46 @@ final class TimerState {
             case .shortBreak, .longBreak: return false
             }
         }
+
+        var sfSymbol: String {
+            switch self {
+            case .focus: return "circle.fill"
+            case .shortBreak: return "circle.bottomhalf.filled"
+            case .longBreak: return "circle.dashed"
+            }
+        }
+
+        var color: Color {
+            switch self {
+            case .focus: return Color(red: 1.0, green: 0.58, blue: 0.0)
+            case .shortBreak: return Color(red: 0.19, green: 0.84, blue: 0.78)
+            case .longBreak: return Color(red: 0.35, green: 0.34, blue: 0.84)
+            }
+        }
+
+        var nsColor: NSColor {
+            switch self {
+            case .focus: return NSColor(red: 1.0, green: 0.58, blue: 0.0, alpha: 1.0)
+            case .shortBreak: return NSColor(red: 0.19, green: 0.84, blue: 0.78, alpha: 1.0)
+            case .longBreak: return NSColor(red: 0.35, green: 0.34, blue: 0.84, alpha: 1.0)
+            }
+        }
+
+        var notificationBody: String {
+            switch self {
+            case .focus: return "Time to focus."
+            case .shortBreak: return "Quick break. Stretch."
+            case .longBreak: return "Cycle complete. Step away."
+            }
+        }
+
+        var systemSound: String {
+            switch self {
+            case .focus: return "Ping"
+            case .shortBreak: return "Glass"
+            case .longBreak: return "Hero"
+            }
+        }
     }
 
     var currentPhase: Phase = .focus
@@ -55,6 +97,13 @@ final class TimerState {
         secondsRemaining = Phase.focus.duration
         completedFocusSessions = 0
     }
+
+    #if DEBUG
+    func skipPhase(notificationManager: NotificationManager) {
+        secondsRemaining = 0
+        advancePhase(notificationManager: notificationManager)
+    }
+    #endif
 
     func tick(notificationManager: NotificationManager) {
         guard isRunning else { return }
