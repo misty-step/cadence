@@ -23,7 +23,7 @@ These values are not configurable. They're correct.
 
 ### Aesthetic
 - Native macOS design language
-- Menu bar app (unobtrusive, always accessible)
+- Desktop window app (persistent, always visible on desktop)
 - Minimal chrome, maximum clarity
 - Subtle, satisfying animations
 - Beautiful typography
@@ -31,7 +31,7 @@ These values are not configurable. They're correct.
 ### UX
 - Zero onboarding - open it and it works
 - Single click to start/pause
-- Keyboard shortcuts for power users
+- Keyboard shortcuts for power users (Space = play/pause, Cmd+R = reset)
 - Gentle, non-jarring notifications
 - Respects Do Not Disturb
 
@@ -40,7 +40,7 @@ These values are not configurable. They're correct.
 - Native macOS APIs (no Electron)
 - Lightweight (~5MB)
 - Fast launch, minimal memory footprint
-- Runs in menu bar, not dock
+- Runs as a persistent desktop window, not in menu bar
 
 ## The Loop
 
@@ -61,21 +61,34 @@ Session 4: Focus (25) → Long Break (15)
 
 ## UI Concept
 
-**Menu bar icon:** Simple circle that fills as the timer progresses. Red during focus, green during break.
+**Desktop window:** A compact, beautiful window that sits on your desktop.
 
-**Click to expand:** Shows current phase, time remaining, and a single Start/Pause button.
+**Window contents:**
+- Current phase (Focus / Short Break / Long Break) with distinct colors
+  - Focus: warm orange (#FF9400)
+  - Short Break: teal (#30D6C8)
+  - Long Break: indigo (#5957D6)
+- Large, clear time remaining (MM:SS) in monospaced font
+- 4 session progress dots showing which focus session you're in
+- Circular progress ring that fills as timer progresses
+- Play/Pause button + Reset button
+- Background subtly shifts color based on phase
+
+**Keyboard shortcuts:**
+- Space = Play/Pause
+- Cmd+R = Reset
 
 **That's it.** No settings panel. No preferences window. No about screen with social links.
 
 ## Open Source
 
-MIT licensed under the Misty Step umbrella. Clean, readable Swift code that serves as an example of how to build a focused macOS menu bar app.
+MIT licensed under the Misty Step umbrella. Clean, readable Swift code that serves as an example of how to build a focused macOS desktop window app.
 
 ## Success Criteria
 
 1. Someone downloads it, opens it, and immediately understands how to use it
 2. It looks so good people screenshot it
-3. It stays out of the way until you need it
+3. It stays visible on desktop until you need it
 4. The codebase is small enough to read in one sitting
 
 ## Name

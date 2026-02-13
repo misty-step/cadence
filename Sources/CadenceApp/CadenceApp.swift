@@ -6,14 +6,17 @@ struct CadenceApp: App {
     @State private var notificationManager = NotificationManager()
 
     var body: some Scene {
-        MenuBarExtra {
-            MenuBarView(timerState: timerState, notificationManager: notificationManager)
+        Window("Cadence", id: "cadence-timer") {
+            TimerWindowView(timerState: timerState, notificationManager: notificationManager)
                 .onAppear {
                     notificationManager.requestAuthorizationIfNeeded()
                 }
-        } label: {
-            MenuBarIcon(phase: timerState.currentPhase, isRunning: timerState.isRunning)
         }
-        .menuBarExtraStyle(.window)
+        .windowStyle(.hiddenTitleBar)
+        .windowResizability(.contentSize)
+        .defaultSize(width: 280, height: 360)
+        .commands {
+            CommandGroup(replacing: .newItem) { }
+        }
     }
 }
