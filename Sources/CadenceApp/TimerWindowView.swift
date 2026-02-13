@@ -3,18 +3,9 @@ import SwiftUI
 struct TimerWindowView: View {
     @Bindable var timerState: TimerState
     @State private var timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
-    let notificationManager: NotificationManager
-
-    private let focusColor = Color(red: 1.0, green: 0.58, blue: 0.0)        // #FF9400
-    private let shortBreakColor = Color(red: 0.19, green: 0.84, blue: 0.78) // #30D6C8
-    private let longBreakColor = Color(red: 0.35, green: 0.34, blue: 0.84)   // #5957D6
 
     private var phaseColor: Color {
-        switch timerState.currentPhase {
-        case .focus: return focusColor
-        case .shortBreak: return shortBreakColor
-        case .longBreak: return longBreakColor
-        }
+        timerState.currentPhase.color
     }
 
     var body: some View {
@@ -98,7 +89,7 @@ struct TimerWindowView: View {
         }
         .frame(width: 280, height: 360)
         .onReceive(timer) { _ in
-            timerState.tick(notificationManager: notificationManager)
+            timerState.tick()
         }
     }
 
