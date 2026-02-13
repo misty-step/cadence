@@ -38,7 +38,7 @@ These values are not configurable. They're correct.
 ### Technical
 - Swift + SwiftUI
 - Native macOS APIs (no Electron)
-- Lightweight (~5MB)
+- Lightweight (~250KB app bundle)
 - Fast launch, minimal memory footprint
 - Runs as a persistent desktop window, not in menu bar
 
