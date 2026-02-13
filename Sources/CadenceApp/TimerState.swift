@@ -44,9 +44,9 @@ final class TimerState {
 
         var color: Color {
             switch self {
-            case .focus: return Color(red: 1.0, green: 0.58, blue: 0.0)
-            case .shortBreak: return Color(red: 0.19, green: 0.84, blue: 0.78)
-            case .longBreak: return Color(red: 0.35, green: 0.34, blue: 0.84)
+            case .focus: return Color(red: 1.0, green: 0.58, blue: 0.0)      // #FF9400
+            case .shortBreak: return Color(red: 0.19, green: 0.84, blue: 0.78) // #30D6C8
+            case .longBreak: return Color(red: 0.35, green: 0.34, blue: 0.84)  // #5957D6
             }
         }
 

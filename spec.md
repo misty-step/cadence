@@ -23,7 +23,7 @@ These values are not configurable. They're correct.
 
 ### Aesthetic
 - Native macOS design language
-- Menu bar app (unobtrusive, always accessible)
+- Desktop window app (always visible, glanceable)
 - Minimal chrome, maximum clarity
 - Subtle, satisfying animations
 - Beautiful typography
@@ -40,7 +40,7 @@ These values are not configurable. They're correct.
 - Native macOS APIs (no Electron)
 - Lightweight (~5MB)
 - Fast launch, minimal memory footprint
-- Runs in menu bar, not dock
+- Persistent desktop window
 
 ## The Loop
 
@@ -61,15 +61,18 @@ Session 4: Focus (25) → Long Break (15)
 
 ## UI Concept
 
-**Menu bar icon:** Simple circle that fills as the timer progresses. Red during focus, green during break.
+**Desktop window:** A beautiful, compact window that stays on your desktop. Features a circular progress ring phase:
+- **Focus:** Warm orange (#FF9400)
+- **Short Break:** Teal (#30D6C8)
+- **Long Break:** Indigo (#5957D6)
 
-**Click to expand:** Shows current phase, time remaining, and a single Start/Pause button.
+**Always visible:** Time remaining in large monospaced text, session progress dots, and simple controls.
 
 **That's it.** No settings panel. No preferences window. No about screen with social links.
 
 ## Open Source
 
-MIT licensed under the Misty Step umbrella. Clean, readable Swift code that serves as an example of how to build a focused macOS menu bar app.
+MIT licensed under the Misty Step umbrella. Clean, readable Swift code that serves as an example of how to build a focused macOS desktop timer app.
 
 ## Success Criteria
 
