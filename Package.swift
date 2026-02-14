@@ -14,6 +14,11 @@ let package = Package(
         .executableTarget(
             name: "CadenceApp",
             path: "Sources/CadenceApp"
+        ),
+        .testTarget(
+            name: "CadenceTests",
+            dependencies: ["CadenceApp"],
+            path: "Tests/CadenceTests"
         )
     ]
 )

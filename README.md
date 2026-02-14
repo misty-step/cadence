@@ -2,7 +2,7 @@
 
 > The natural rhythm of focused work.
 
-A macOS menu bar Pomodoro timer that does one thing exceptionally well.
+A macOS desktop Pomodoro timer that does one thing exceptionally well.
 
 ## Philosophy
 
@@ -23,6 +23,15 @@ open Cadence.app
 
 Requires macOS 14+.
 
+## Development
+
+```bash
+swift build
+swift run
+```
+
+Note: notifications require the bundled app (`./scripts/bundle.sh`) since `swift run` has no app bundle identifier.
+
 ### Permanent Installation
 
 ```bash
@@ -37,14 +46,19 @@ osascript -e 'tell application "System Events" to make login item at end with pr
 
 ## Usage
 
-Click the circle in your menu bar. Press Start. Focus.
+Open Cadence. Keep the window on your desktop.
+
+- `Space`: start/pause
+- `Cmd+R`: reset
+
+Closing the window quits the app.
 
 ## Design
 
 - Native Swift + SwiftUI
-- Menu bar only (no dock icon)
+- Persistent desktop window (no menu bar UI)
 - Gentle notifications
-- ~50KB binary
+- Small binary (~200KB release build)
 
 ## License
 

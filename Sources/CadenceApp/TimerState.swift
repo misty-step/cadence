@@ -1,4 +1,3 @@
-import AppKit
 import Foundation
 import Observation
 import SwiftUI
@@ -27,34 +26,11 @@ final class TimerState {
             }
         }
 
-        var isFocus: Bool {
-            switch self {
-            case .focus: return true
-            case .shortBreak, .longBreak: return false
-            }
-        }
-
-        var sfSymbol: String {
-            switch self {
-            case .focus: return "circle.fill"
-            case .shortBreak: return "circle.bottomhalf.filled"
-            case .longBreak: return "circle.dashed"
-            }
-        }
-
         var color: Color {
             switch self {
-            case .focus: return Color(red: 1.0, green: 0.58, blue: 0.0)
-            case .shortBreak: return Color(red: 0.19, green: 0.84, blue: 0.78)
-            case .longBreak: return Color(red: 0.35, green: 0.34, blue: 0.84)
-            }
-        }
-
-        var nsColor: NSColor {
-            switch self {
-            case .focus: return NSColor(red: 1.0, green: 0.58, blue: 0.0, alpha: 1.0)
-            case .shortBreak: return NSColor(red: 0.19, green: 0.84, blue: 0.78, alpha: 1.0)
-            case .longBreak: return NSColor(red: 0.35, green: 0.34, blue: 0.84, alpha: 1.0)
+            case .focus: return Color(red: 1.0, green: 0.58, blue: 0.0) // #FF9400
+            case .shortBreak: return Color(red: 0.19, green: 0.84, blue: 0.78) // #30D6C8
+            case .longBreak: return Color(red: 0.35, green: 0.34, blue: 0.84) // #5957D6
             }
         }
 
@@ -74,6 +50,9 @@ final class TimerState {
             }
         }
     }
+
+    @ObservationIgnored
+    var onPhaseChange: ((Phase) -> Void)?
 
     var currentPhase: Phase = .focus
     var secondsRemaining: Int = Phase.focus.duration
@@ -105,23 +84,23 @@ final class TimerState {
     }
 
     #if DEBUG
-    func skipPhase(notificationManager: NotificationManager) {
+    func skipPhase() {
         secondsRemaining = 0
-        advancePhase(notificationManager: notificationManager)
+        advancePhase()
     }
     #endif
 
-    func tick(notificationManager: NotificationManager) {
+    func tick() {
         guard isRunning else { return }
         if secondsRemaining > 0 {
             secondsRemaining -= 1
         }
         if secondsRemaining == 0 {
-            advancePhase(notificationManager: notificationManager)
+            advancePhase()
         }
     }
 
-    private func advancePhase(notificationManager: NotificationManager) {
+    private func advancePhase() {
         let next: Phase
         switch currentPhase {
         case .focus:
@@ -138,7 +117,7 @@ final class TimerState {
 
         currentPhase = next
         secondsRemaining = next.duration
-        notificationManager.notify(phase: next)
+        onPhaseChange?(next)
         isRunning = true
     }
 }
