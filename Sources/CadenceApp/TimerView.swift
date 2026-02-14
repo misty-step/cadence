@@ -46,9 +46,6 @@ struct TimerView: View {
                 phaseTransitionId = UUID()
             }
         }
-        .onReceive(Timer.publish(every: 1, on: .main, in: .common).autoconnect()) { _ in
-            timerState.tick(notificationManager: notificationManager)
-        }
     }
 }
 

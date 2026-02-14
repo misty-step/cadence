@@ -1,5 +1,4 @@
 import AppKit
-import Combine
 import SwiftUI
 
 @main
@@ -19,7 +18,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var timerState = TimerState()
     var notificationManager = NotificationManager()
     var statusItem: NSStatusItem?
-    private var cancellables = Set<AnyCancellable>()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
@@ -40,16 +38,28 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             updateStatusBarIcon()
             button.action = #selector(toggleWindow)
             button.target = self
+            button.sendAction(on: [.leftMouseUp, .rightMouseUp])
         }
 
-        Timer.publish(every: 1, on: .main, in: .common)
-            .autoconnect()
-            .sink { [weak self] _ in
-                MainActor.assumeIsolated {
-                    self?.updateStatusBarIcon()
+        // Use withObservationTracking to update status bar only when state changes
+        setupObservationTracking()
+    }
+
+    private func setupObservationTracking() {
+        var lastPhase: TimerState.Phase = timerState.currentPhase
+        var lastIsRunning: Bool = timerState.isRunning
+
+        // Periodically check for state changes and update status bar (more reliable than withObservationTracking)
+        Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                guard let self = self else { return }
+                if self.timerState.currentPhase != lastPhase || self.timerState.isRunning != lastIsRunning {
+                    lastPhase = self.timerState.currentPhase
+                    lastIsRunning = self.timerState.isRunning
+                    self.updateStatusBarIcon()
                 }
             }
-            .store(in: &cancellables)
+        }
     }
 
     private func updateStatusBarIcon() {
@@ -61,8 +71,40 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         button.image = icon.createNSImage()
     }
 
-    @objc private func toggleWindow() {
-        windowManager?.toggleWindow()
+    @objc private func toggleWindow(_ sender: NSStatusBarButton) {
+        guard let event = NSApp.currentEvent else {
+            windowManager?.toggleWindow()
+            return
+        }
+
+        if event.type == .rightMouseUp {
+            showContextMenu()
+        } else {
+            windowManager?.toggleWindow()
+        }
+    }
+
+    private func showContextMenu() {
+        let menu = NSMenu()
+        menu.addItem(NSMenuItem(title: "Show Timer", action: #selector(showTimer), keyEquivalent: ""))
+        menu.addItem(NSMenuItem.separator())
+        menu.addItem(NSMenuItem(title: "Quit Cadence", action: #selector(quitApp), keyEquivalent: "q"))
+
+        for item in menu.items {
+            item.target = self
+        }
+
+        statusItem?.menu = menu
+        statusItem?.button?.performClick(nil)
+        statusItem?.menu = nil
+    }
+
+    @objc private func showTimer() {
+        windowManager?.showWindow()
+    }
+
+    @objc private func quitApp() {
+        NSApp.terminate(nil)
     }
 }
 
@@ -71,26 +113,38 @@ struct MenuBarIconImage {
     let phase: TimerState.Phase
     let isRunning: Bool
 
+    // Constants extracted to avoid magic numbers
+    private enum Constants {
+        static let size: CGFloat = 18
+        static let inset: CGFloat = 2
+        static let lineWidth: CGFloat = 2
+        static let thinLineWidth: CGFloat = 1.5
+        static let veryThinLineWidth: CGFloat = 1
+        static let dashPatternLarge: [CGFloat] = [3, 2]
+        static let dashPatternSmall: [CGFloat] = [2, 2]
+    }
+
     func createNSImage() -> NSImage {
-        let size = NSSize(width: 18, height: 18)
+        let size = NSSize(width: Constants.size, height: Constants.size)
         let image = NSImage(size: size, flipped: false) { rect in
             NSColor.labelColor.setStroke()
 
-            let inset: CGFloat = 2
-            let circleRect = rect.insetBy(dx: inset, dy: inset)
+            let circleRect = rect.insetBy(dx: Constants.inset, dy: Constants.inset)
             let center = NSPoint(x: rect.midX, y: rect.midY)
             let radius = circleRect.width / 2
 
             switch (phase, isRunning) {
             case (.focus, true):
+                NSColor.labelColor.setFill()
                 NSBezierPath(ovalIn: circleRect).fill()
 
             case (.focus, false):
                 let path = NSBezierPath(ovalIn: circleRect)
-                path.lineWidth = 2
+                path.lineWidth = Constants.lineWidth
                 path.stroke()
 
             case (.shortBreak, true):
+                NSColor.labelColor.setFill()
                 let bottomPath = NSBezierPath()
                 bottomPath.move(to: NSPoint(x: center.x - radius, y: center.y))
                 bottomPath.appendArc(withCenter: center, radius: radius,
@@ -101,24 +155,24 @@ struct MenuBarIconImage {
                 let topPath = NSBezierPath()
                 topPath.appendArc(withCenter: center, radius: radius,
                                  startAngle: 0, endAngle: 180, clockwise: false)
-                topPath.lineWidth = 1.5
+                topPath.lineWidth = Constants.thinLineWidth
                 topPath.stroke()
 
             case (.shortBreak, false):
                 let path = NSBezierPath(ovalIn: circleRect)
-                path.lineWidth = 1.5
+                path.lineWidth = Constants.thinLineWidth
                 path.stroke()
 
             case (.longBreak, true):
                 let path = NSBezierPath(ovalIn: circleRect)
-                path.lineWidth = 2
-                path.setLineDash([3, 2], count: 2, phase: 0)
+                path.lineWidth = Constants.lineWidth
+                path.setLineDash(Constants.dashPatternLarge, count: Constants.dashPatternLarge.count, phase: 0)
                 path.stroke()
 
             case (.longBreak, false):
                 let path = NSBezierPath(ovalIn: circleRect)
-                path.lineWidth = 1
-                path.setLineDash([2, 2], count: 2, phase: 0)
+                path.lineWidth = Constants.veryThinLineWidth
+                path.setLineDash(Constants.dashPatternSmall, count: Constants.dashPatternSmall.count, phase: 0)
                 path.stroke()
             }
             return true
