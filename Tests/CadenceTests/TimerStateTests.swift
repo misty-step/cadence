@@ -130,14 +130,12 @@ struct TimerStateTests {
         state.start()
 
         for session in 1...4 {
-            // Complete focus phase
             state.secondsRemaining = 1
             state.tick(notificationManager: notifications)
 
             if session < 4 {
                 #expect(state.currentPhase == .shortBreak,
                         "Session \(session): expected shortBreak")
-                // Complete break phase
                 state.secondsRemaining = 1
                 state.tick(notificationManager: notifications)
                 #expect(state.currentPhase == .focus,
@@ -157,7 +155,7 @@ struct TimerStateTests {
         let state = TimerState()
         state.start()
         state.secondsRemaining = 1
-        state.tick(notificationManager: notifications) // advance to shortBreak
+        state.tick(notificationManager: notifications)
         state.completedFocusSessions = 2
 
         state.reset()
@@ -187,7 +185,7 @@ struct TimerStateTests {
         state.completedFocusSessions = 3
         state.start()
         state.secondsRemaining = 1
-        state.tick(notificationManager: notifications) // -> longBreak
+        state.tick(notificationManager: notifications)
 
         #expect(state.currentPhase == .longBreak)
         #expect(state.displayCompletedSessions == 4,
