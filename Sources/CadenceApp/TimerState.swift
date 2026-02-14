@@ -93,11 +93,37 @@ final class TimerState {
         return min(max(Double(elapsed) / Double(totalSeconds), 0), 1)
     }
 
-    func start() { isRunning = true }
-    func pause() { isRunning = false }
+    private var backgroundTimer: Timer?
+
+    func start() {
+        isRunning = true
+        startBackgroundTimer()
+    }
+
+    func pause() {
+        isRunning = false
+        stopBackgroundTimer()
+    }
+
+    private func startBackgroundTimer() {
+        stopBackgroundTimer()
+        backgroundTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                guard let self = self else { return }
+                self.tick(notificationManager: NotificationManager())
+            }
+        }
+    }
+
+    private func stopBackgroundTimer() {
+        backgroundTimer?.invalidate()
+        backgroundTimer = nil
+    }
+
     func toggle() { isRunning ? pause() : start() }
 
     func reset() {
+        stopBackgroundTimer()
         isRunning = false
         currentPhase = .focus
         secondsRemaining = Phase.focus.duration
