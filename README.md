@@ -2,14 +2,14 @@
 
 > The natural rhythm of focused work.
 
-A macOS menu bar Pomodoro timer that does one thing exceptionally well.
+A macOS desktop Pomodoro timer that does one thing exceptionally well.
 
 ## Philosophy
 
 Opinionated defaults over configuration. The Pomodoro technique works:
 
 - **Focus:** 25 minutes
-- **Short break:** 5 minutes  
+- **Short break:** 5 minutes
 - **Long break:** 15 minutes (after 4 focus sessions)
 
 These values are not configurable. They're correct.
@@ -37,14 +37,15 @@ osascript -e 'tell application "System Events" to make login item at end with pr
 
 ## Usage
 
-Click the circle in your menu bar. Press Start. Focus.
+Open Cadence. A floating window stays on your desktop across all spaces. Click the menu bar icon to toggle visibility. Press Space to start.
 
 ## Design
 
 - Native Swift + SwiftUI
-- Menu bar only (no dock icon)
+- Persistent floating window with menu bar icon
+- Window position remembered across launches
 - Gentle notifications
-- ~50KB binary
+- Small binary
 
 ## License
 
