@@ -23,7 +23,10 @@ open Cadence.app
 
 ## Tests
 
-No test target yet.
+```bash
+swift test
+```
 
-If you add non-trivial logic, add a `Tests/` target with coverage for it.
+Tests live in `Tests/CadenceTests/`. The test suite covers `TimerState` phase logic:
+session counting, break selection, full pomodoro cycle, and basic operations.
 
