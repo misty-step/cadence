@@ -93,6 +93,56 @@ final class TimerState {
         return min(max(Double(elapsed) / Double(totalSeconds), 0), 1)
     }
 
+    // CYCLE: [Focus(0), Short(1), Focus(2), Short(3), Focus(4), Short(5), Focus(6), Long(7)]
+    private static let cycleMap: [(Phase, Int)] = [
+        (.focus, 0), (.shortBreak, 1), (.focus, 1), (.shortBreak, 2),
+        (.focus, 2), (.shortBreak, 3), (.focus, 3), (.longBreak, 0)
+    ]
+
+    var cycleIndex: Int {
+        switch currentPhase {
+        case .longBreak:  return 7
+        case .shortBreak: return completedFocusSessions * 2 - 1
+        case .focus:      return completedFocusSessions * 2
+        }
+    }
+
+    func jumpToPhase(_ index: Int) {
+        guard Self.cycleMap.indices.contains(index) else { return }
+        pause()
+        let (phase, sessions) = Self.cycleMap[index]
+        currentPhase = phase
+        completedFocusSessions = sessions
+        secondsRemaining = phase.duration
+    }
+
+    func resetCurrentPhase() {
+        pause()
+        secondsRemaining = currentPhase.duration
+    }
+
+    struct CycleSegment: Sendable {
+        let phase: Phase
+        let cycleIndex: Int
+        var isActive: Bool
+        var isCompleted: Bool
+        var progressFraction: Double
+    }
+
+    var cycleSegments: [CycleSegment] {
+        let current = cycleIndex
+        return Self.cycleMap.enumerated().map { idx, entry in
+            let (phase, _) = entry
+            return CycleSegment(
+                phase: phase,
+                cycleIndex: idx,
+                isActive: idx == current,
+                isCompleted: idx < current,
+                progressFraction: idx == current ? progress : 0
+            )
+        }
+    }
+
     private var backgroundTimer: Timer?
 
     func start() {

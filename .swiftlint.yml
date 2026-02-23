@@ -1,0 +1,22 @@
+disabled_rules:
+  - todo
+
+opt_in_rules:
+  - force_unwrapping
+  - explicit_init
+  - closure_spacing
+
+force_cast: error
+force_try: error
+line_length:
+  warning: 120
+  error: 160
+type_name:
+  min_length: 2
+
+custom_rules:
+  no_magic_numbers_in_views:
+    name: "No magic numbers in Views"
+    regex: '\.(padding|frame|font\.system)\(.*[0-9]{2,}'
+    message: "Use DesignSystem spacing/typography constants instead of inline numbers."
+    severity: warning

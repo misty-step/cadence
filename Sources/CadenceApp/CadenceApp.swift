@@ -1,4 +1,5 @@
 import AppKit
+import CoreText
 import SwiftUI
 
 @main
@@ -21,10 +22,19 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
+        registerFonts()
         notificationManager.requestAuthorizationIfNeeded()
         windowManager = WindowManager(timerState: timerState, notificationManager: notificationManager)
         setupStatusBarItem()
         windowManager?.showWindow()
+    }
+
+    private func registerFonts() {
+        let fontNames = ["Outfit-Light", "Outfit-Regular", "Outfit-Medium"]
+        for name in fontNames {
+            guard let url = Bundle.main.url(forResource: name, withExtension: "ttf") else { continue }
+            CTFontManagerRegisterFontsForURL(url as CFURL, .process, nil)
+        }
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {

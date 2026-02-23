@@ -211,4 +211,76 @@ struct TimerStateTests {
         #expect(TimerState.Phase.shortBreak.isFocus == false)
         #expect(TimerState.Phase.longBreak.isFocus == false)
     }
+
+    // MARK: - Cycle Index
+
+    @Test func cycleIndexComputedCorrectly() {
+        let state = TimerState()
+        state.currentPhase = .focus
+        state.completedFocusSessions = 0
+        #expect(state.cycleIndex == 0)
+
+        state.currentPhase = .shortBreak
+        state.completedFocusSessions = 1
+        #expect(state.cycleIndex == 1)
+
+        state.currentPhase = .focus
+        state.completedFocusSessions = 1
+        #expect(state.cycleIndex == 2)
+
+        state.currentPhase = .shortBreak
+        state.completedFocusSessions = 2
+        #expect(state.cycleIndex == 3)
+
+        state.currentPhase = .focus
+        state.completedFocusSessions = 3
+        #expect(state.cycleIndex == 6)
+
+        state.currentPhase = .longBreak
+        state.completedFocusSessions = 0
+        #expect(state.cycleIndex == 7)
+    }
+
+    @Test func jumpToPhaseUpdatesState() {
+        let state = TimerState()
+        state.jumpToPhase(3)
+        #expect(state.currentPhase == .shortBreak)
+        #expect(state.completedFocusSessions == 2)
+        #expect(state.secondsRemaining == TimerState.Phase.shortBreak.duration)
+        #expect(state.isRunning == false)
+    }
+
+    @Test func jumpToPhaseOutOfBoundsIsNoOp() {
+        let state = TimerState()
+        let phase = state.currentPhase
+        let seconds = state.secondsRemaining
+        state.jumpToPhase(-1)
+        #expect(state.currentPhase == phase)
+        #expect(state.secondsRemaining == seconds)
+        state.jumpToPhase(8)
+        #expect(state.currentPhase == phase)
+        #expect(state.secondsRemaining == seconds)
+    }
+
+    @Test func resetCurrentPhaseResetsSeconds() {
+        let state = TimerState()
+        state.start()
+        state.secondsRemaining = 100
+        state.resetCurrentPhase()
+        #expect(state.secondsRemaining == TimerState.Phase.focus.duration)
+        #expect(state.isRunning == false)
+    }
+
+    @Test func cycleSegmentsCount() {
+        let state = TimerState()
+        #expect(state.cycleSegments.count == 8)
+    }
+
+    @Test func cycleSegmentsActiveIsCurrentIndex() {
+        let state = TimerState()
+        let segments = state.cycleSegments
+        let active = segments.filter { $0.isActive }
+        #expect(active.count == 1)
+        #expect(active[0].cycleIndex == state.cycleIndex)
+    }
 }
