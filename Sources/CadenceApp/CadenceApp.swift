@@ -16,15 +16,22 @@ struct CadenceApp: App {
 @MainActor
 class AppDelegate: NSObject, NSApplicationDelegate {
     var windowManager: WindowManager?
-    var timerState = TimerState()
-    var notificationManager = NotificationManager()
+    let timerState: TimerState
+    let notificationManager: NotificationManager
     var statusItem: NSStatusItem?
+
+    override init() {
+        let notificationManager = NotificationManager()
+        self.notificationManager = notificationManager
+        self.timerState = TimerState(notificationManager: notificationManager)
+        super.init()
+    }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
         registerFonts()
         notificationManager.requestAuthorizationIfNeeded()
-        windowManager = WindowManager(timerState: timerState, notificationManager: notificationManager)
+        windowManager = WindowManager(timerState: timerState)
         setupStatusBarItem()
         windowManager?.showWindow()
     }
@@ -32,8 +39,20 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private func registerFonts() {
         let fontNames = ["Outfit-Light", "Outfit-Regular", "Outfit-Medium"]
         for name in fontNames {
-            guard let url = Bundle.main.url(forResource: name, withExtension: "ttf") else { continue }
-            CTFontManagerRegisterFontsForURL(url as CFURL, .process, nil)
+            guard let url = Bundle.main.url(forResource: name, withExtension: "ttf") else {
+                #if DEBUG
+                assertionFailure("Missing font resource: \(name).ttf")
+                #endif
+                continue
+            }
+
+            var error: Unmanaged<CFError>?
+            if !CTFontManagerRegisterFontsForURL(url as CFURL, .process, &error) {
+                #if DEBUG
+                let description = (error?.takeRetainedValue() as Error?)?.localizedDescription ?? "Unknown error"
+                assertionFailure("Font registration failed for \(name): \(description)")
+                #endif
+            }
         }
     }
 

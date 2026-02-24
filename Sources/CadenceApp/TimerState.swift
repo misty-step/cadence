@@ -44,9 +44,9 @@ final class TimerState {
 
         var color: Color {
             switch self {
-            case .focus: return Color(red: 1.0, green: 0.58, blue: 0.0)
-            case .shortBreak: return Color(red: 0.19, green: 0.84, blue: 0.78)
-            case .longBreak: return Color(red: 0.35, green: 0.34, blue: 0.84)
+            case .focus: return DesignSystem.Colors.focus
+            case .shortBreak: return DesignSystem.Colors.shortBreak
+            case .longBreak: return DesignSystem.Colors.longBreak
             }
         }
 
@@ -93,27 +93,45 @@ final class TimerState {
         return min(max(Double(elapsed) / Double(totalSeconds), 0), 1)
     }
 
-    // CYCLE: [Focus(0), Short(1), Focus(2), Short(3), Focus(4), Short(5), Focus(6), Long(7)]
-    private static let cycleMap: [(Phase, Int)] = [
-        (.focus, 0), (.shortBreak, 1), (.focus, 1), (.shortBreak, 2),
-        (.focus, 2), (.shortBreak, 3), (.focus, 3), (.longBreak, 0)
+    // MARK: - Cycle
+
+    private struct CycleStep {
+        let phase: Phase
+        let completedFocusSessions: Int
+    }
+
+    private static let cycleMap: [CycleStep] = [
+        .init(phase: .focus, completedFocusSessions: 0),
+        .init(phase: .shortBreak, completedFocusSessions: 1),
+        .init(phase: .focus, completedFocusSessions: 1),
+        .init(phase: .shortBreak, completedFocusSessions: 2),
+        .init(phase: .focus, completedFocusSessions: 2),
+        .init(phase: .shortBreak, completedFocusSessions: 3),
+        .init(phase: .focus, completedFocusSessions: 3),
+        .init(phase: .longBreak, completedFocusSessions: 0)
     ]
 
     var cycleIndex: Int {
+        let maxIndex = Self.cycleMap.count - 1
         switch currentPhase {
-        case .longBreak:  return 7
-        case .shortBreak: return completedFocusSessions * 2 - 1
-        case .focus:      return completedFocusSessions * 2
+        case .longBreak:
+            return maxIndex
+        case .shortBreak:
+            let index = completedFocusSessions * 2 - 1
+            return min(max(index, 0), maxIndex)
+        case .focus:
+            let index = completedFocusSessions * 2
+            return min(max(index, 0), maxIndex)
         }
     }
 
     func jumpToPhase(_ index: Int) {
         guard Self.cycleMap.indices.contains(index) else { return }
         pause()
-        let (phase, sessions) = Self.cycleMap[index]
-        currentPhase = phase
-        completedFocusSessions = sessions
-        secondsRemaining = phase.duration
+        let step = Self.cycleMap[index]
+        currentPhase = step.phase
+        completedFocusSessions = step.completedFocusSessions
+        secondsRemaining = step.phase.duration
     }
 
     func resetCurrentPhase() {
@@ -132,18 +150,22 @@ final class TimerState {
     var cycleSegments: [CycleSegment] {
         let current = cycleIndex
         return Self.cycleMap.enumerated().map { idx, entry in
-            let (phase, _) = entry
-            return CycleSegment(
-                phase: phase,
+            CycleSegment(
+                phase: entry.phase,
                 cycleIndex: idx,
                 isActive: idx == current,
                 isCompleted: idx < current,
-                progressFraction: idx == current ? progress : 0
+                progressFraction: idx == current ? progress : (idx < current ? 1.0 : 0)
             )
         }
     }
 
     private var backgroundTimer: Timer?
+    private let notificationManager: NotificationManager
+
+    init(notificationManager: NotificationManager = NotificationManager()) {
+        self.notificationManager = notificationManager
+    }
 
     func start() {
         isRunning = true
@@ -160,7 +182,7 @@ final class TimerState {
         backgroundTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
             Task { @MainActor [weak self] in
                 guard let self = self else { return }
-                self.tick(notificationManager: NotificationManager())
+                self.tick(notificationManager: self.notificationManager)
             }
         }
     }
@@ -170,7 +192,13 @@ final class TimerState {
         backgroundTimer = nil
     }
 
-    func toggle() { isRunning ? pause() : start() }
+    func toggle() {
+        if isRunning {
+            pause()
+        } else {
+            start()
+        }
+    }
 
     func reset() {
         stopBackgroundTimer()
