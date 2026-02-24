@@ -18,13 +18,24 @@ struct GradientBackground: View {
 // MARK: - Grain Overlay
 
 struct GrainOverlay: View {
+    private enum Constants {
+        static let width: CGFloat = 400
+        static let height: CGFloat = 500
+    }
+
     private static let noiseImage: NSImage = {
-        let size = CGRect(x: 0, y: 0, width: 400, height: 500)
+        let size = CGRect(x: 0, y: 0, width: Constants.width, height: Constants.height)
         guard let randomFilter = CIFilter(name: "CIRandomGenerator"),
-              let output = randomFilter.outputImage else { return NSImage() }
+              let output = randomFilter.outputImage else {
+            assertionFailure("Failed to create CIRandomGenerator output image")
+            return NSImage()
+        }
         let cropped = output.cropped(to: size)
-        guard let cgImage = CIContext().createCGImage(cropped, from: size) else { return NSImage() }
-        return NSImage(cgImage: cgImage, size: NSSize(width: 400, height: 500))
+        guard let cgImage = CIContext().createCGImage(cropped, from: size) else {
+            assertionFailure("Failed to create CGImage for grain overlay")
+            return NSImage()
+        }
+        return NSImage(cgImage: cgImage, size: NSSize(width: Constants.width, height: Constants.height))
     }()
 
     var body: some View {
@@ -39,17 +50,24 @@ struct GrainOverlay: View {
 // MARK: - Phase Label
 
 struct PhaseLabel: View {
+    private enum Constants {
+        static let stackSpacing: CGFloat = 6
+        static let letterTracking: CGFloat = 1.8
+        static let underlineWidth: CGFloat = 20
+        static let underlineHeight: CGFloat = 1.5
+    }
+
     let phase: TimerState.Phase
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: Constants.stackSpacing) {
             Text(phase.name.uppercased())
                 .font(DesignSystem.Typography.phaseLabel())
-                .tracking(1.8)
+                .tracking(Constants.letterTracking)
                 .foregroundStyle(phase.color.opacity(DesignSystem.Opacity.phaseLabelColor))
             Rectangle()
                 .fill(phase.color)
-                .frame(width: 20, height: 1.5)
+                .frame(width: Constants.underlineWidth, height: Constants.underlineHeight)
                 .opacity(DesignSystem.Opacity.underlineAccent)
         }
         .animation(DesignSystem.Animation.uiUpdate, value: phase)
@@ -69,8 +87,8 @@ struct TimeDisplay: View {
     }
 
     private func formatted(_ seconds: Int) -> String {
-        let s = max(seconds, 0)
-        return String(format: "%02d:%02d", s / 60, s % 60)
+        let clampedSeconds = max(seconds, 0)
+        return String(format: "%02d:%02d", clampedSeconds / 60, clampedSeconds % 60)
     }
 }
 
@@ -107,6 +125,12 @@ extension View {
 // MARK: - Cadence Button
 
 struct CadenceButton: View {
+    private enum Constants {
+        static let horizontalPadding: CGFloat = 44
+        static let verticalPadding: CGFloat = 13
+        static let pressedScale: CGFloat = 0.97
+    }
+
     let isRunning: Bool
     let phase: TimerState.Phase
     let action: () -> Void
@@ -117,13 +141,13 @@ struct CadenceButton: View {
             Text(isRunning ? "Pause" : "Start")
                 .font(DesignSystem.Typography.buttonLabel())
                 .foregroundStyle(phase.color)
-                .padding(.horizontal, 44)
-                .padding(.vertical, 13)
+                .padding(.horizontal, Constants.horizontalPadding)
+                .padding(.vertical, Constants.verticalPadding)
                 .background(Capsule().fill(phase.color.opacity(DesignSystem.Opacity.buttonBackground)))
         }
         .buttonStyle(.plain)
         .keyboardShortcut(.space, modifiers: [])
-        .scaleEffect(isPressed ? 0.97 : 1.0)
+        .scaleEffect(isPressed ? Constants.pressedScale : 1.0)
         .animation(DesignSystem.Animation.buttonPress, value: isPressed)
         .pressEvents {
             isPressed = true
@@ -138,7 +162,6 @@ struct CadenceButton: View {
 struct TimelineSegment: View {
     enum SegmentState { case active, completed, upcoming }
 
-    let index: Int
     let phase: TimerState.Phase
     let state: SegmentState
     let progress: Double
@@ -146,9 +169,9 @@ struct TimelineSegment: View {
 
     private var opacity: Double {
         switch state {
-        case .active:    return DesignSystem.Opacity.timelineActive
+        case .active: return DesignSystem.Opacity.timelineActive
         case .completed: return DesignSystem.Opacity.timelineCompleted
-        case .upcoming:  return DesignSystem.Opacity.timelineUpcoming
+        case .upcoming: return DesignSystem.Opacity.timelineUpcoming
         }
     }
 
@@ -165,7 +188,7 @@ struct TimelineSegment: View {
                 .frame(width: width, height: height)
             if state == .active && progress > 0 {
                 Capsule()
-                    .fill(Color.white.opacity(0.3))
+                    .fill(Color.white.opacity(DesignSystem.Opacity.timelineProgress))
                     .frame(width: width * progress, height: height)
             }
         }
@@ -179,37 +202,24 @@ struct TimelineSegment: View {
 struct PhaseTimeline: View {
     @Bindable var timerState: TimerState
 
-    // Proportional durations (minutes): focus=25, short=5, long=15. Total=130
-    private static let durations: [CGFloat] = [25, 5, 25, 5, 25, 5, 25, 15]
-    private static let totalDuration: CGFloat = durations.reduce(0, +)
-
-    private func segmentPhase(at index: Int) -> TimerState.Phase {
-        switch index {
-        case 1, 3, 5: return .shortBreak
-        case 7:        return .longBreak
-        default:       return .focus
-        }
-    }
-
-    private func segmentState(at index: Int) -> TimelineSegment.SegmentState {
-        let current = timerState.cycleIndex
-        if index == current { return .active }
-        if index < current  { return .completed }
-        return .upcoming
-    }
-
     var body: some View {
         GeometryReader { geo in
-            let totalGap = DesignSystem.Spacing.timelineGap * 7
-            let available = geo.size.width - totalGap
+            let segments = timerState.cycleSegments
+            let durations = segments.map { CGFloat($0.phase.duration) }
+            let totalDuration = max(durations.reduce(0, +), 1)
+            let segmentCount = segments.count
+            let gapCount = max(0, segmentCount - 1)
+            let totalGap = DesignSystem.Spacing.timelineGap * CGFloat(gapCount)
+            let available = max(0, geo.size.width - totalGap)
+
             HStack(spacing: DesignSystem.Spacing.timelineGap) {
-                ForEach(0..<8, id: \.self) { idx in
-                    let segWidth = available * (Self.durations[idx] / Self.totalDuration)
+                ForEach(segments.indices, id: \.self) { idx in
+                    let seg = segments[idx]
+                    let segWidth = available * (durations[idx] / totalDuration)
                     TimelineSegment(
-                        index: idx,
-                        phase: segmentPhase(at: idx),
-                        state: segmentState(at: idx),
-                        progress: idx == timerState.cycleIndex ? timerState.progress : 0,
+                        phase: seg.phase,
+                        state: seg.isActive ? .active : (seg.isCompleted ? .completed : .upcoming),
+                        progress: seg.progressFraction,
                         width: segWidth
                     )
                     .onTapGesture {
@@ -232,7 +242,6 @@ struct PhaseTimeline: View {
 
 struct TimerView: View {
     @Bindable var timerState: TimerState
-    let notificationManager: NotificationManager
 
     var body: some View {
         ZStack {
