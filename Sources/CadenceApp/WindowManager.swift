@@ -5,17 +5,15 @@ import SwiftUI
 final class WindowManager: NSObject, NSWindowDelegate {
     private var window: NSWindow?
     private let timerState: TimerState
-    private let notificationManager: NotificationManager
 
-    init(timerState: TimerState, notificationManager: NotificationManager) {
+    init(timerState: TimerState) {
         self.timerState = timerState
-        self.notificationManager = notificationManager
         super.init()
         createWindow()
     }
 
     private func createWindow() {
-        let contentView = TimerView(timerState: timerState, notificationManager: notificationManager)
+        let contentView = TimerView(timerState: timerState)
         let hostingController = NSHostingController(rootView: contentView)
 
         let windowSize = NSSize(width: 380, height: 480)

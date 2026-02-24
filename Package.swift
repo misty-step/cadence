@@ -13,7 +13,8 @@ let package = Package(
     targets: [
         .executableTarget(
             name: "CadenceApp",
-            path: "Sources/CadenceApp"
+            path: "Sources/CadenceApp",
+            resources: [.process("Resources")]
         ),
         .testTarget(
             name: "CadenceTests",

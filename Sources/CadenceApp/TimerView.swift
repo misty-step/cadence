@@ -1,277 +1,102 @@
+import AppKit
+import CoreImage
 import SwiftUI
 
-struct TimerView: View {
-    @Bindable var timerState: TimerState
-    let notificationManager: NotificationManager
+// MARK: - Gradient Background
 
-    @State private var phaseTransitionId = UUID()
-
-    var body: some View {
-        ZStack {
-            PhaseBackground(phase: timerState.currentPhase)
-
-            VStack(spacing: 0) {
-                PhaseHeader(phase: timerState.currentPhase)
-                    .padding(.top, 40)
-
-                Spacer()
-
-                CircularTimerView(
-                    timerState: timerState,
-                    progress: timerState.progress
-                )
-                .id(phaseTransitionId)
-                .transition(.asymmetric(
-                    insertion: .opacity.combined(with: .scale(scale: 0.95)),
-                    removal: .opacity.combined(with: .scale(scale: 1.05))
-                ))
-
-                Spacer()
-
-                SessionProgressDots(
-                    completedSessions: timerState.displayCompletedSessions,
-                    phase: timerState.currentPhase
-                )
-                .padding(.bottom, 24)
-
-                ControlButton(isRunning: timerState.isRunning) {
-                    timerState.toggle()
-                }
-                .padding(.bottom, 40)
-            }
-        }
-        .frame(width: 380, height: 480)
-        .onChange(of: timerState.currentPhase) { _, _ in
-            withAnimation(.easeInOut(duration: 0.4)) {
-                phaseTransitionId = UUID()
-            }
-        }
-    }
-}
-
-// MARK: - Phase Background
-
-struct PhaseBackground: View {
+struct GradientBackground: View {
     let phase: TimerState.Phase
-    @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.colorScheme) var scheme
 
     var body: some View {
-        GeometryReader { geometry in
-            ZStack {
-                (colorScheme == .dark
-                    ? Color.black
-                    : Color.white)
-                    .ignoresSafeArea()
-
-                RadialGradient(
-                    colors: [
-                        phase.color.opacity(colorScheme == .dark ? 0.15 : 0.08),
-                        phase.color.opacity(0)
-                    ],
-                    center: .center,
-                    startRadius: 50,
-                    endRadius: min(geometry.size.width, geometry.size.height) * 0.6
-                )
-                .ignoresSafeArea()
-                .animation(.easeInOut(duration: 0.6), value: phase)
-            }
-        }
+        DesignSystem.Gradients.background(for: phase, scheme: scheme)
+            .ignoresSafeArea()
+            .animation(DesignSystem.Animation.gradientTransition, value: phase)
     }
 }
 
-// MARK: - Phase Header
+// MARK: - Grain Overlay
 
-struct PhaseHeader: View {
+struct GrainOverlay: View {
+    private enum Constants {
+        static let width: CGFloat = 400
+        static let height: CGFloat = 500
+    }
+
+    private static let noiseImage: NSImage = {
+        let size = CGRect(x: 0, y: 0, width: Constants.width, height: Constants.height)
+        guard let randomFilter = CIFilter(name: "CIRandomGenerator"),
+              let output = randomFilter.outputImage else {
+            assertionFailure("Failed to create CIRandomGenerator output image")
+            return NSImage()
+        }
+        let cropped = output.cropped(to: size)
+        guard let cgImage = CIContext().createCGImage(cropped, from: size) else {
+            assertionFailure("Failed to create CGImage for grain overlay")
+            return NSImage()
+        }
+        return NSImage(cgImage: cgImage, size: NSSize(width: Constants.width, height: Constants.height))
+    }()
+
+    var body: some View {
+        Image(nsImage: Self.noiseImage)
+            .resizable()
+            .opacity(DesignSystem.Opacity.grainOverlay)
+            .allowsHitTesting(false)
+            .drawingGroup()
+    }
+}
+
+// MARK: - Phase Label
+
+struct PhaseLabel: View {
+    private enum Constants {
+        static let stackSpacing: CGFloat = 6
+        static let letterTracking: CGFloat = 1.8
+        static let underlineWidth: CGFloat = 20
+        static let underlineHeight: CGFloat = 1.5
+    }
+
     let phase: TimerState.Phase
 
     var body: some View {
-        VStack(spacing: 8) {
-            Text(phase.name)
-                .font(.system(size: 24, weight: .semibold, design: .rounded))
-                .foregroundStyle(phase.color)
-
-            Text(phaseSubtitle)
-                .font(.system(size: 13, weight: .medium))
-                .foregroundStyle(.secondary)
+        VStack(alignment: .leading, spacing: Constants.stackSpacing) {
+            Text(phase.name.uppercased())
+                .font(DesignSystem.Typography.phaseLabel())
+                .tracking(Constants.letterTracking)
+                .foregroundStyle(phase.color.opacity(DesignSystem.Opacity.phaseLabelColor))
+            Rectangle()
+                .fill(phase.color)
+                .frame(width: Constants.underlineWidth, height: Constants.underlineHeight)
+                .opacity(DesignSystem.Opacity.underlineAccent)
         }
-        .animation(.easeInOut(duration: 0.3), value: phase)
-    }
-
-    private var phaseSubtitle: String {
-        switch phase {
-        case .focus:
-            return "Deep work session"
-        case .shortBreak:
-            return "Quick refresh"
-        case .longBreak:
-            return "Full recharge"
-        }
+        .animation(DesignSystem.Animation.uiUpdate, value: phase)
     }
 }
 
-// MARK: - Circular Timer View
+// MARK: - Time Display
 
-struct CircularTimerView: View {
-    let timerState: TimerState
-    let progress: Double
-    @Environment(\.colorScheme) private var colorScheme
+struct TimeDisplay: View {
+    let secondsRemaining: Int
 
     var body: some View {
-        ZStack {
-            ProgressRing(
-                progress: progress,
-                lineWidth: 6,
-                color: timerState.currentPhase.color.opacity(0.3)
-            )
-            .blur(radius: 8)
-            .frame(width: 240, height: 240)
-
-            ProgressRing(
-                progress: progress,
-                lineWidth: 12,
-                color: timerState.currentPhase.color
-            )
-            .frame(width: 240, height: 240)
-            .shadow(color: timerState.currentPhase.color.opacity(0.4), radius: 10, x: 0, y: 0)
-
-            VStack(spacing: 4) {
-                Text(timeString(timerState.secondsRemaining))
-                    .font(.system(size: 64, weight: .thin, design: .rounded))
-                    .monospacedDigit()
-                    .foregroundStyle(.primary)
-                    .contentTransition(.numericText())
-
-                Text("remaining")
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundStyle(.secondary)
-            }
-        }
+        Text(formatted(secondsRemaining))
+            .font(DesignSystem.Typography.timeDisplay())
+            .monospacedDigit()
+            .contentTransition(.numericText())
     }
 
-    private func timeString(_ seconds: Int) -> String {
-        let mins = max(seconds, 0) / 60
-        let secs = max(seconds, 0) % 60
-        return String(format: "%02d:%02d", mins, secs)
+    private func formatted(_ seconds: Int) -> String {
+        let clampedSeconds = max(seconds, 0)
+        return String(format: "%02d:%02d", clampedSeconds / 60, clampedSeconds % 60)
     }
 }
 
-// MARK: - Progress Ring
-
-struct ProgressRing: View {
-    let progress: Double
-    let lineWidth: CGFloat
-    let color: Color
-
-    var body: some View {
-        ZStack {
-            Circle()
-                .stroke(color.opacity(0.12), lineWidth: lineWidth)
-
-            Circle()
-                .trim(from: 0, to: progress)
-                .stroke(
-                    color.gradient,
-                    style: StrokeStyle(
-                        lineWidth: lineWidth,
-                        lineCap: .round
-                    )
-                )
-                .rotationEffect(.degrees(-90))
-                .animation(.linear(duration: 1.0), value: progress)
-        }
-    }
-}
-
-// MARK: - Session Progress Dots
-
-struct SessionProgressDots: View {
-    let completedSessions: Int
-    let phase: TimerState.Phase
-
-    var body: some View {
-        HStack(spacing: 12) {
-            ForEach(0..<4, id: \.self) { index in
-                SessionDot(
-                    isFilled: index < completedSessions,
-                    phase: phase,
-                    index: index
-                )
-            }
-        }
-    }
-}
-
-struct SessionDot: View {
-    let isFilled: Bool
-    let phase: TimerState.Phase
-    let index: Int
-
-    @State private var scale: CGFloat = 1.0
-
-    var body: some View {
-        Circle()
-            .fill(isFilled ? phase.color : Color.secondary.opacity(0.2))
-            .frame(width: 10, height: 10)
-            .scaleEffect(scale)
-            .onChange(of: isFilled) { oldValue, newValue in
-                if newValue && !oldValue {
-                    withAnimation(.spring(response: 0.3, dampingFraction: 0.5)) {
-                        scale = 1.4
-                    }
-                    withAnimation(.spring(response: 0.3, dampingFraction: 0.5).delay(0.1)) {
-                        scale = 1.0
-                    }
-                }
-            }
-    }
-}
-
-// MARK: - Control Button
-
-struct ControlButton: View {
-    let isRunning: Bool
-    let action: () -> Void
-
-    @State private var isPressed = false
-
-    var body: some View {
-        Button(action: action) {
-            HStack(spacing: 8) {
-                Image(systemName: isRunning ? "pause.fill" : "play.fill")
-                    .font(.system(size: 16, weight: .semibold))
-                Text(isRunning ? "Pause" : "Start")
-                    .font(.system(size: 16, weight: .semibold))
-            }
-            .foregroundStyle(.white)
-            .frame(width: 140, height: 48)
-            .background(
-                Capsule()
-                    .fill(isRunning
-                        ? Color.orange.gradient
-                        : Color.green.gradient)
-            )
-            .scaleEffect(isPressed ? 0.95 : 1.0)
-        }
-        .buttonStyle(.plain)
-        .keyboardShortcut(.space, modifiers: [])
-        .pressEvents {
-            withAnimation(.easeInOut(duration: 0.1)) {
-                isPressed = true
-            }
-        } onRelease: {
-            withAnimation(.easeInOut(duration: 0.1)) {
-                isPressed = false
-            }
-        }
-    }
-}
-
-// MARK: - Button Press Effects
+// MARK: - Press Events Modifier
 
 struct PressEventsModifier: ViewModifier {
     var onPress: () -> Void
     var onRelease: () -> Void
-
     @State private var pressing = false
 
     func body(content: Content) -> some View {
@@ -294,5 +119,172 @@ struct PressEventsModifier: ViewModifier {
 extension View {
     func pressEvents(onPress: @escaping () -> Void, onRelease: @escaping () -> Void) -> some View {
         modifier(PressEventsModifier(onPress: onPress, onRelease: onRelease))
+    }
+}
+
+// MARK: - Cadence Button
+
+struct CadenceButton: View {
+    private enum Constants {
+        static let horizontalPadding: CGFloat = 44
+        static let verticalPadding: CGFloat = 13
+        static let pressedScale: CGFloat = 0.97
+    }
+
+    let isRunning: Bool
+    let phase: TimerState.Phase
+    let action: () -> Void
+    @State private var isPressed = false
+
+    var body: some View {
+        Button(action: action) {
+            Text(isRunning ? "Pause" : "Start")
+                .font(DesignSystem.Typography.buttonLabel())
+                .foregroundStyle(phase.color)
+                .padding(.horizontal, Constants.horizontalPadding)
+                .padding(.vertical, Constants.verticalPadding)
+                .background(Capsule().fill(phase.color.opacity(DesignSystem.Opacity.buttonBackground)))
+        }
+        .buttonStyle(.plain)
+        .keyboardShortcut(.space, modifiers: [])
+        .scaleEffect(isPressed ? Constants.pressedScale : 1.0)
+        .animation(DesignSystem.Animation.buttonPress, value: isPressed)
+        .pressEvents {
+            isPressed = true
+        } onRelease: {
+            isPressed = false
+        }
+    }
+}
+
+// MARK: - Timeline Segment
+
+struct TimelineSegment: View {
+    enum SegmentState { case active, completed, upcoming }
+
+    let phase: TimerState.Phase
+    let state: SegmentState
+    let progress: Double
+    let width: CGFloat
+
+    private var opacity: Double {
+        switch state {
+        case .active: return DesignSystem.Opacity.timelineActive
+        case .completed: return DesignSystem.Opacity.timelineCompleted
+        case .upcoming: return DesignSystem.Opacity.timelineUpcoming
+        }
+    }
+
+    private var height: CGFloat {
+        state == .active
+            ? DesignSystem.Spacing.timelineHeightActive
+            : DesignSystem.Spacing.timelineHeightInactive
+    }
+
+    var body: some View {
+        ZStack(alignment: .leading) {
+            Capsule()
+                .fill(phase.color.opacity(opacity))
+                .frame(width: width, height: height)
+            if state == .active && progress > 0 {
+                Capsule()
+                    .fill(Color.white.opacity(DesignSystem.Opacity.timelineProgress))
+                    .frame(width: width * progress, height: height)
+            }
+        }
+        .frame(width: width, height: DesignSystem.Spacing.timelineHeightActive, alignment: .center)
+        .animation(DesignSystem.Animation.timelineHover, value: state)
+    }
+}
+
+// MARK: - Phase Timeline
+
+struct PhaseTimeline: View {
+    @Bindable var timerState: TimerState
+
+    var body: some View {
+        GeometryReader { geo in
+            let segments = timerState.cycleSegments
+            let durations = segments.map { CGFloat($0.phase.duration) }
+            let totalDuration = max(durations.reduce(0, +), 1)
+            let segmentCount = segments.count
+            let gapCount = max(0, segmentCount - 1)
+            let totalGap = DesignSystem.Spacing.timelineGap * CGFloat(gapCount)
+            let available = max(0, geo.size.width - totalGap)
+
+            HStack(spacing: DesignSystem.Spacing.timelineGap) {
+                ForEach(segments.indices, id: \.self) { idx in
+                    let seg = segments[idx]
+                    let segWidth = available * (durations[idx] / totalDuration)
+                    TimelineSegment(
+                        phase: seg.phase,
+                        state: seg.isActive ? .active : (seg.isCompleted ? .completed : .upcoming),
+                        progress: seg.progressFraction,
+                        width: segWidth
+                    )
+                    .onTapGesture {
+                        withAnimation(DesignSystem.Animation.uiUpdate) {
+                            if idx == timerState.cycleIndex {
+                                timerState.resetCurrentPhase()
+                            } else {
+                                timerState.jumpToPhase(idx)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        .frame(height: DesignSystem.Spacing.timelineHeightActive)
+    }
+}
+
+// MARK: - Timer View
+
+struct TimerView: View {
+    @Bindable var timerState: TimerState
+
+    var body: some View {
+        ZStack {
+            GradientBackground(phase: timerState.currentPhase)
+            GrainOverlay()
+
+            VStack {
+                HStack(alignment: .center) {
+                    PhaseLabel(phase: timerState.currentPhase)
+                    Spacer()
+                }
+                .padding(.top, DesignSystem.Spacing.headerTop)
+                .padding(.horizontal, DesignSystem.Spacing.headerSideInset)
+                Spacer()
+            }
+
+            VStack {
+                HStack {
+                    Spacer()
+                    TimeDisplay(secondsRemaining: timerState.secondsRemaining)
+                        .padding(.trailing, DesignSystem.Spacing.timeRightPadding)
+                }
+                .padding(.leading, DesignSystem.Spacing.timeLeftInset)
+                .padding(.top, DesignSystem.Spacing.timeTop)
+                Spacer()
+            }
+
+            VStack(spacing: 0) {
+                Spacer()
+                CadenceButton(
+                    isRunning: timerState.isRunning,
+                    phase: timerState.currentPhase
+                ) { timerState.toggle() }
+                .padding(.bottom, DesignSystem.Spacing.buttonBottom)
+
+                PhaseTimeline(timerState: timerState)
+                    .padding(.horizontal, DesignSystem.Spacing.timelineSideInset)
+                    .padding(.bottom, DesignSystem.Spacing.timelineBottom)
+            }
+        }
+        .frame(
+            width: DesignSystem.Spacing.windowWidth,
+            height: DesignSystem.Spacing.windowHeight
+        )
     }
 }
