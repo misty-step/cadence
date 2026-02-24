@@ -17,6 +17,6 @@ type_name:
 custom_rules:
   no_magic_numbers_in_views:
     name: "No magic numbers in Views"
-    regex: '\.(padding|frame|font\.system)\(.*[0-9]{2,}'
+    regex: '\.(padding|frame)\([^\n]*[0-9]+'
     message: "Use DesignSystem spacing/typography constants instead of inline numbers."
     severity: warning
