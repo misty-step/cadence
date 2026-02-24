@@ -276,11 +276,11 @@ struct TimerStateTests {
         #expect(state.cycleSegments.count == 8)
     }
 
-    @Test func cycleSegmentsActiveIsCurrentIndex() {
+    @Test func cycleSegmentsActiveIsCurrentIndex() throws {
         let state = TimerState()
         let segments = state.cycleSegments
         let active = segments.filter { $0.isActive }
-        #expect(active.count == 1)
+        try #require(active.count == 1)
         #expect(active[0].cycleIndex == state.cycleIndex)
     }
 }
