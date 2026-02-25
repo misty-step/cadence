@@ -87,6 +87,7 @@ enum DesignSystem {
         static let timelineGap: CGFloat = 3
         static let timelineHeightActive: CGFloat = 5
         static let timelineHeightInactive: CGFloat = 2
+        static let timelineHitTargetHeight: CGFloat = 24
     }
 
     enum Opacity {
