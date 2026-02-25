@@ -192,7 +192,7 @@ struct TimelineSegment: View {
                     .frame(width: width * progress, height: height)
             }
         }
-        .frame(width: width, height: DesignSystem.Spacing.timelineHeightActive, alignment: .center)
+        // Frame expands hit target to 24pt without affecting the 5pt/2pt visual bar height inside.
         .frame(width: width, height: DesignSystem.Spacing.timelineHitTargetHeight, alignment: .center)
         .contentShape(Rectangle())
         .animation(DesignSystem.Animation.timelineHover, value: state)
