@@ -193,6 +193,8 @@ struct TimelineSegment: View {
             }
         }
         .frame(width: width, height: DesignSystem.Spacing.timelineHeightActive, alignment: .center)
+        .frame(width: width, height: DesignSystem.Spacing.timelineHitTargetHeight, alignment: .center)
+        .contentShape(Rectangle())
         .animation(DesignSystem.Animation.timelineHover, value: state)
     }
 }
@@ -234,7 +236,7 @@ struct PhaseTimeline: View {
                 }
             }
         }
-        .frame(height: DesignSystem.Spacing.timelineHeightActive)
+        .frame(height: DesignSystem.Spacing.timelineHitTargetHeight)
     }
 }
 
