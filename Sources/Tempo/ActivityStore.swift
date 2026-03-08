@@ -50,28 +50,50 @@ final class ActivityStore {
     func addFocusActivity(_ name: String, recurring: Bool = true) {
         let trimmed = name.trimmingCharacters(in: .whitespaces)
         guard !trimmed.isEmpty else { return }
-        focusActivities.append(Activity(name: trimmed, isRecurring: recurring))
+        let activity = Activity(name: trimmed, isRecurring: recurring)
+        focusActivities.append(activity)
+        if currentFocusActivity == nil {
+            currentFocusActivity = activity
+        }
         save()
     }
 
     func addBreakActivity(_ name: String, recurring: Bool = true) {
         let trimmed = name.trimmingCharacters(in: .whitespaces)
         guard !trimmed.isEmpty else { return }
-        breakActivities.append(Activity(name: trimmed, isRecurring: recurring))
+        let activity = Activity(name: trimmed, isRecurring: recurring)
+        breakActivities.append(activity)
+        if currentBreakActivity == nil {
+            currentBreakActivity = activity
+        }
         save()
     }
 
     func removeActivity(_ activity: Activity) {
+        let removedFocus = currentFocusActivity?.id == activity.id
+        let removedBreak = currentBreakActivity?.id == activity.id
         focusActivities.removeAll { $0.id == activity.id }
         breakActivities.removeAll { $0.id == activity.id }
+        if removedFocus {
+            currentFocusActivity = focusActivities.randomElement()
+        }
+        if removedBreak {
+            currentBreakActivity = breakActivities.randomElement()
+        }
         save()
     }
 
     func toggleRecurring(_ activity: Activity) {
         if let idx = focusActivities.firstIndex(where: { $0.id == activity.id }) {
             focusActivities[idx].isRecurring.toggle()
+            if currentFocusActivity?.id == activity.id {
+                currentFocusActivity = focusActivities[idx]
+            }
         } else if let idx = breakActivities.firstIndex(where: { $0.id == activity.id }) {
             breakActivities[idx].isRecurring.toggle()
+            if currentBreakActivity?.id == activity.id {
+                currentBreakActivity = breakActivities[idx]
+            }
         }
         save()
     }

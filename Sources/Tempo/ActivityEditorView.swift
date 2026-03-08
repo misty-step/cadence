@@ -71,6 +71,7 @@ struct ActivityRow: View {
                     .frame(width: 18)
             }
             .buttonStyle(.plain)
+            .accessibilityLabel(activity.isRecurring ? "Make one-off" : "Make recurring")
             .help(activity.isRecurring ? "Recurring" : "One-off")
 
             Text(activity.name)
@@ -84,6 +85,7 @@ struct ActivityRow: View {
                     .font(.caption)
             }
             .buttonStyle(.plain)
+            .accessibilityLabel("Delete \(activity.name)")
         }
     }
 }

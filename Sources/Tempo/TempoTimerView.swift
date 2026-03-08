@@ -5,6 +5,7 @@ struct TempoTimerView: View {
     @Bindable var timerState: TimerState
     var activityStore: ActivityStore
     @State private var completedActivity: Activity?
+    @State private var completedPhase: TimerState.Phase?
     @State private var undoTask: Task<Void, Never>?
 
     var body: some View {
@@ -112,9 +113,11 @@ struct TempoTimerView: View {
 
     private func markCompleted(_ activity: Activity) {
         undoTask?.cancel()
+        let phase = timerState.currentPhase
 
         withAnimation(DesignSystem.Animation.uiUpdate) {
             completedActivity = activity
+            completedPhase = phase
         }
 
         undoTask = Task { @MainActor in
@@ -128,14 +131,16 @@ struct TempoTimerView: View {
         undoTask?.cancel()
         withAnimation(DesignSystem.Animation.uiUpdate) {
             completedActivity = nil
+            completedPhase = nil
         }
     }
 
     private func commitCompletion() {
-        guard completedActivity != nil else { return }
+        guard completedActivity != nil, let phase = completedPhase else { return }
         withAnimation(DesignSystem.Animation.uiUpdate) {
             completedActivity = nil
-            activityStore.completeCurrentActivity(for: timerState.currentPhase)
+            completedPhase = nil
+            activityStore.completeCurrentActivity(for: phase)
         }
     }
 }
