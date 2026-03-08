@@ -71,6 +71,8 @@ public enum DesignSystem {
         public static func phaseLabel() -> Font { Font.custom("Outfit-Medium", size: 11) }
         public static func timeDisplay() -> Font { Font.custom("Outfit-Light", size: 84) }
         public static func buttonLabel() -> Font { Font.custom("Outfit-Medium", size: 14) }
+        public static func activityLabel() -> Font { Font.custom("Outfit-Regular", size: 18) }
+        public static func activityAction() -> Font { Font.custom("Outfit-Medium", size: 12) }
     }
 
     public enum Spacing {
@@ -88,6 +90,8 @@ public enum DesignSystem {
         public static let timelineHeightActive: CGFloat = 5
         public static let timelineHeightInactive: CGFloat = 2
         public static let timelineHitTargetHeight: CGFloat = 24
+        public static let editorWidth: CGFloat = 320
+        public static let editorHeight: CGFloat = 440
     }
 
     public enum Opacity {

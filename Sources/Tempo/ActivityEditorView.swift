@@ -50,7 +50,7 @@ struct ActivityEditorView: View {
                     .foregroundStyle(DesignSystem.Colors.shortBreak)
             }
         }
-        .frame(width: 320, height: 440)
+        .frame(width: DesignSystem.Spacing.editorWidth, height: DesignSystem.Spacing.editorHeight)
     }
 }
 

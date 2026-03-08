@@ -89,9 +89,11 @@ final class ActivityStore {
     // MARK: - Persistence
 
     private static var fileURL: URL {
-        let appSupport = FileManager.default.urls(
+        guard let appSupport = FileManager.default.urls(
             for: .applicationSupportDirectory, in: .userDomainMask
-        ).first!
+        ).first else {
+            fatalError("Could not locate Application Support directory.")
+        }
         let dir = appSupport.appendingPathComponent("Tempo", isDirectory: true)
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         return dir.appendingPathComponent("activities.json")
@@ -103,19 +105,32 @@ final class ActivityStore {
     }
 
     private func save() {
-        guard let data = try? JSONEncoder().encode(
-            StoredData(focusActivities: focusActivities, breakActivities: breakActivities)
-        ) else { return }
-        try? data.write(to: Self.fileURL, options: .atomic)
+        do {
+            let data = try JSONEncoder().encode(
+                StoredData(focusActivities: focusActivities, breakActivities: breakActivities)
+            )
+            try data.write(to: Self.fileURL, options: .atomic)
+        } catch {
+            #if DEBUG
+            print("ActivityStore save error: \(error.localizedDescription)")
+            #endif
+        }
     }
 
     private func load() {
-        guard let data = try? Data(contentsOf: Self.fileURL),
-              let stored = try? JSONDecoder().decode(StoredData.self, from: data)
-        else { return }
-        focusActivities = stored.focusActivities
-        breakActivities = stored.breakActivities
-        currentFocusActivity = focusActivities.randomElement()
-        currentBreakActivity = breakActivities.randomElement()
+        let url = Self.fileURL
+        guard FileManager.default.fileExists(atPath: url.path) else { return }
+        do {
+            let data = try Data(contentsOf: url)
+            let stored = try JSONDecoder().decode(StoredData.self, from: data)
+            focusActivities = stored.focusActivities
+            breakActivities = stored.breakActivities
+            currentFocusActivity = focusActivities.randomElement()
+            currentBreakActivity = breakActivities.randomElement()
+        } catch {
+            #if DEBUG
+            print("ActivityStore load error: \(error.localizedDescription)")
+            #endif
+        }
     }
 }

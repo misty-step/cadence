@@ -148,7 +148,10 @@ class TempoAppDelegate: NSObject, NSApplicationDelegate {
         let controller = NSHostingController(rootView: editor)
 
         let window = NSWindow(
-            contentRect: NSRect(origin: .zero, size: NSSize(width: 320, height: 440)),
+            contentRect: NSRect(origin: .zero, size: NSSize(
+                width: DesignSystem.Spacing.editorWidth,
+                height: DesignSystem.Spacing.editorHeight
+            )),
             styleMask: [.titled, .closable],
             backing: .buffered,
             defer: false

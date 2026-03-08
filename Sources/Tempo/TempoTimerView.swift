@@ -70,13 +70,13 @@ struct TempoTimerView: View {
                     .foregroundStyle(timerState.currentPhase.color.opacity(0.6))
                     .font(.system(size: 16))
                 Text(completed.name)
-                    .font(.custom("Outfit-Regular", size: 18))
+                    .font(DesignSystem.Typography.activityLabel())
                     .strikethrough()
                     .foregroundStyle(.primary.opacity(0.35))
                 Button("Undo") {
                     undoCompletion()
                 }
-                .font(.custom("Outfit-Medium", size: 12))
+                .font(DesignSystem.Typography.activityAction())
                 .foregroundStyle(timerState.currentPhase.color.opacity(0.7))
                 .buttonStyle(.plain)
             }
@@ -85,7 +85,7 @@ struct TempoTimerView: View {
             // Normal state
             HStack(spacing: 8) {
                 Text(activity.name)
-                    .font(.custom("Outfit-Regular", size: 18))
+                    .font(DesignSystem.Typography.activityLabel())
                     .foregroundStyle(.primary.opacity(0.55))
                     .contentTransition(.opacity)
                     .onTapGesture {
