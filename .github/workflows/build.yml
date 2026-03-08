@@ -6,7 +6,7 @@ on:
   pull_request:
 
 jobs:
-  "Build and Test":
+  build:
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
