@@ -12,3 +12,17 @@ jobs:
       - uses: actions/checkout@v4
       - run: swift build
       - run: swift test
+
+  merge-gate:
+    name: merge-gate
+    needs: [build]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - run: |
+          if [[ "${{ needs.build.result }}" == "success" ]]; then
+            echo "merge-gate green"
+          else
+            echo "merge-gate red (build=${{ needs.build.result }})"
+            exit 1
+          fi
