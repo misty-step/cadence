@@ -1,14 +1,21 @@
 import CadenceKit
 import Foundation
 import Observation
+import os
 
 @MainActor
 @Observable
 final class ActivityStore {
+    private static let logger = Logger(subsystem: "com.cadence.tempo", category: "ActivityStore")
+
     var focusActivities: [Activity] = []
     var breakActivities: [Activity] = []
+    private let storageURL: URL
 
-    init() { load() }
+    init(storageURL: URL? = nil) {
+        self.storageURL = storageURL ?? Self.defaultFileURL
+        load()
+    }
 
     // MARK: - Current Activity
 
@@ -110,7 +117,7 @@ final class ActivityStore {
 
     // MARK: - Persistence
 
-    private static var fileURL: URL {
+    private static var defaultFileURL: URL {
         guard let appSupport = FileManager.default.urls(
             for: .applicationSupportDirectory, in: .userDomainMask
         ).first else {
@@ -131,28 +138,23 @@ final class ActivityStore {
             let data = try JSONEncoder().encode(
                 StoredData(focusActivities: focusActivities, breakActivities: breakActivities)
             )
-            try data.write(to: Self.fileURL, options: .atomic)
+            try data.write(to: storageURL, options: .atomic)
         } catch {
-            #if DEBUG
-            print("ActivityStore save error: \(error.localizedDescription)")
-            #endif
+            Self.logger.error("Failed to save activities: \(error.localizedDescription)")
         }
     }
 
     private func load() {
-        let url = Self.fileURL
-        guard FileManager.default.fileExists(atPath: url.path) else { return }
+        guard FileManager.default.fileExists(atPath: storageURL.path) else { return }
         do {
-            let data = try Data(contentsOf: url)
+            let data = try Data(contentsOf: storageURL)
             let stored = try JSONDecoder().decode(StoredData.self, from: data)
             focusActivities = stored.focusActivities
             breakActivities = stored.breakActivities
             currentFocusActivity = focusActivities.randomElement()
             currentBreakActivity = breakActivities.randomElement()
         } catch {
-            #if DEBUG
-            print("ActivityStore load error: \(error.localizedDescription)")
-            #endif
+            Self.logger.error("Failed to load activities: \(error.localizedDescription)")
         }
     }
 }
