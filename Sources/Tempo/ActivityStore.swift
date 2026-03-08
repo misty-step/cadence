@@ -55,7 +55,7 @@ final class ActivityStore {
     // MARK: - Mutations
 
     func addFocusActivity(_ name: String, recurring: Bool = true) {
-        let trimmed = name.trimmingCharacters(in: .whitespaces)
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
         let activity = Activity(name: trimmed, isRecurring: recurring)
         focusActivities.append(activity)
@@ -66,7 +66,7 @@ final class ActivityStore {
     }
 
     func addBreakActivity(_ name: String, recurring: Bool = true) {
-        let trimmed = name.trimmingCharacters(in: .whitespaces)
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
         let activity = Activity(name: trimmed, isRecurring: recurring)
         breakActivities.append(activity)

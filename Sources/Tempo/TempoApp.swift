@@ -140,7 +140,7 @@ class TempoAppDelegate: NSObject, NSApplicationDelegate {
     @objc private func showEditor() {
         if let existing = editorWindow, existing.isVisible {
             existing.makeKeyAndOrderFront(nil)
-            NSApp.activate(ignoringOtherApps: true)
+            NSApp.activate()
             return
         }
 
@@ -160,7 +160,7 @@ class TempoAppDelegate: NSObject, NSApplicationDelegate {
         window.contentViewController = controller
         window.center()
         window.makeKeyAndOrderFront(nil)
-        NSApp.activate(ignoringOtherApps: true)
+        NSApp.activate()
 
         editorWindow = window
     }
