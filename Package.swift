@@ -7,19 +7,31 @@ let package = Package(
         .macOS(.v14)
     ],
     products: [
-        .executable(name: "Cadence", targets: ["CadenceApp"])
+        .library(name: "CadenceKit", targets: ["CadenceKit"]),
+        .executable(name: "Cadence", targets: ["Cadence"]),
+        .executable(name: "Tempo", targets: ["Tempo"])
     ],
     dependencies: [],
     targets: [
-        .executableTarget(
-            name: "CadenceApp",
-            path: "Sources/CadenceApp",
+        .target(
+            name: "CadenceKit",
+            path: "Sources/CadenceKit",
             resources: [.process("Resources")]
         ),
+        .executableTarget(
+            name: "Cadence",
+            dependencies: ["CadenceKit"],
+            path: "Sources/Cadence"
+        ),
+        .executableTarget(
+            name: "Tempo",
+            dependencies: ["CadenceKit"],
+            path: "Sources/Tempo"
+        ),
         .testTarget(
-            name: "CadenceTests",
-            dependencies: ["CadenceApp"],
-            path: "Tests/CadenceTests"
+            name: "CadenceKitTests",
+            dependencies: ["CadenceKit"],
+            path: "Tests/CadenceKitTests"
         )
     ]
 )

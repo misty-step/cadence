@@ -18,7 +18,7 @@ mkdir -p "$DEBUG_APP/Contents/Resources"
 cp .build/debug/Cadence "$DEBUG_APP/Contents/MacOS/"
 
 # Copy SPM resources bundle (fonts, etc.) — SPM puts resources flat in bundle root
-RESOURCES_BUNDLE=".build/debug/Cadence_CadenceApp.bundle"
+RESOURCES_BUNDLE=".build/debug/Cadence_CadenceKit.bundle"
 if [ -d "$RESOURCES_BUNDLE" ]; then
     find "$RESOURCES_BUNDLE" -maxdepth 1 -type f | while read -r f; do
         cp "$f" "$DEBUG_APP/Contents/Resources/"
