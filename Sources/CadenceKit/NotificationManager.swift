@@ -3,13 +3,15 @@ import Foundation
 @preconcurrency import UserNotifications
 
 @MainActor
-final class NotificationManager {
+public final class NotificationManager {
     private var center: UNUserNotificationCenter? {
         guard Bundle.main.bundleIdentifier != nil else { return nil }
         return UNUserNotificationCenter.current()
     }
 
-    func requestAuthorizationIfNeeded() {
+    public init() {}
+
+    public func requestAuthorizationIfNeeded() {
         guard let center = center else { return }
         Task {
             let settings = await center.notificationSettings()
@@ -19,7 +21,7 @@ final class NotificationManager {
         }
     }
 
-    func notify(phase: TimerState.Phase) {
+    public func notify(phase: TimerState.Phase) {
         NSSound(named: NSSound.Name(phase.systemSound))?.play()
 
         guard let center = center else { return }

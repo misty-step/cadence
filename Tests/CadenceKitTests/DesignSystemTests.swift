@@ -2,7 +2,7 @@ import AppKit
 import SwiftUI
 import Testing
 
-@testable import CadenceApp
+@testable import CadenceKit
 
 @Suite("DesignSystem")
 @MainActor

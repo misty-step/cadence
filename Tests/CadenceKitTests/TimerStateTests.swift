@@ -1,6 +1,6 @@
 import Testing
 
-@testable import CadenceApp
+@testable import CadenceKit
 
 @Suite("TimerState")
 @MainActor
