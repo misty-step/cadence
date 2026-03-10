@@ -44,9 +44,21 @@ class TempoAppDelegate: NSObject, NSApplicationDelegate {
     private func registerFonts() {
         let fontNames = ["Outfit-Light", "Outfit-Regular", "Outfit-Medium"]
         for name in fontNames {
-            guard let url = Bundle.main.url(forResource: name, withExtension: "ttf") else { continue }
+            guard let url = Bundle.main.url(forResource: name, withExtension: "ttf") else {
+                #if DEBUG
+                    assertionFailure("Missing font resource: \(name).ttf")
+                #endif
+                continue
+            }
+
             var error: Unmanaged<CFError>?
-            CTFontManagerRegisterFontsForURL(url as CFURL, .process, &error)
+            if !CTFontManagerRegisterFontsForURL(url as CFURL, .process, &error) {
+                #if DEBUG
+                    let description = (error?.takeRetainedValue() as Error?)?.localizedDescription
+                        ?? "Unknown error"
+                    assertionFailure("Font registration failed for \(name): \(description)")
+                #endif
+            }
         }
     }
 
@@ -76,6 +88,7 @@ class TempoAppDelegate: NSObject, NSApplicationDelegate {
                     }
                     self.activityStore.pickActivity(for: current)
                     self.lastPhase = current
+                    self.lastIsRunning = running
                     self.updateStatusBarIcon()
                 } else if running != self.lastIsRunning {
                     self.lastIsRunning = running

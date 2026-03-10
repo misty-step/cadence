@@ -50,6 +50,7 @@ struct ActivityEditorView: View {
                     .foregroundStyle(DesignSystem.Colors.shortBreak)
             }
         }
+        .environment(\.editMode, .constant(.active))
         .frame(width: DesignSystem.Spacing.editorWidth, height: DesignSystem.Spacing.editorHeight)
     }
 }
