@@ -2,21 +2,31 @@ import AppKit
 import SwiftUI
 
 @MainActor
-final class WindowManager: NSObject, NSWindowDelegate {
+public final class WindowManager<Content: View>: NSObject, NSWindowDelegate {
     private var window: NSWindow?
-    private let timerState: TimerState
+    private let contentView: Content
+    private let windowTitle: String
+    private let autosaveName: String
 
-    init(timerState: TimerState) {
-        self.timerState = timerState
+    public init(
+        title: String,
+        autosaveName: String,
+        content: Content
+    ) {
+        self.contentView = content
+        self.windowTitle = title
+        self.autosaveName = autosaveName
         super.init()
         createWindow()
     }
 
     private func createWindow() {
-        let contentView = TimerView(timerState: timerState)
         let hostingController = NSHostingController(rootView: contentView)
 
-        let windowSize = NSSize(width: 380, height: 480)
+        let windowSize = NSSize(
+            width: DesignSystem.Spacing.windowWidth,
+            height: DesignSystem.Spacing.windowHeight
+        )
         let window = NSWindow(
             contentRect: NSRect(origin: .zero, size: windowSize),
             styleMask: [.titled, .closable, .miniaturizable, .fullSizeContentView],
@@ -26,7 +36,7 @@ final class WindowManager: NSObject, NSWindowDelegate {
 
         self.window = window
 
-        window.title = "Cadence"
+        window.title = windowTitle
         window.contentViewController = hostingController
         window.isMovableByWindowBackground = true
         window.titlebarAppearsTransparent = true
@@ -39,25 +49,23 @@ final class WindowManager: NSObject, NSWindowDelegate {
 
         window.delegate = self
 
-        // Persist and restore window position automatically
-        window.setFrameAutosaveName("CadenceMainWindow")
+        window.setFrameAutosaveName(autosaveName)
 
-        // Validate restored frame is on-screen; center if not
         if !isFrameOnScreen(window.frame) {
             window.center()
         }
     }
 
-    func showWindow() {
+    public func showWindow() {
         window?.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
     }
 
-    func hideWindow() {
+    public func hideWindow() {
         window?.orderOut(nil)
     }
 
-    func toggleWindow() {
+    public func toggleWindow() {
         guard let window = window else { return }
 
         if window.isVisible && window.isKeyWindow {
@@ -77,7 +85,7 @@ final class WindowManager: NSObject, NSWindowDelegate {
 
     // MARK: - NSWindowDelegate
 
-    func windowShouldClose(_ sender: NSWindow) -> Bool {
+    public func windowShouldClose(_ sender: NSWindow) -> Bool {
         hideWindow()
         return false
     }
