@@ -52,9 +52,9 @@ public final class TimerState {
 
         public var nsColor: NSColor {
             switch self {
-            case .focus: return NSColor(red: 1.0, green: 0.58, blue: 0.0, alpha: 1.0)
-            case .shortBreak: return NSColor(red: 0.19, green: 0.84, blue: 0.78, alpha: 1.0)
-            case .longBreak: return NSColor(red: 0.35, green: 0.34, blue: 0.84, alpha: 1.0)
+            case .focus: return NSColor(red: 0.89, green: 0.41, blue: 0.04, alpha: 1.0)
+            case .shortBreak: return NSColor(red: 0.0, green: 0.58, blue: 0.53, alpha: 1.0)
+            case .longBreak: return NSColor(red: 0.38, green: 0.34, blue: 0.74, alpha: 1.0)
             }
         }
 

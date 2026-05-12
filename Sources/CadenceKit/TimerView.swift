@@ -55,13 +55,14 @@ public struct GrainOverlay: View {
 
 public struct PhaseLabel: View {
     private enum Constants {
-        static let stackSpacing: CGFloat = 6
-        static let letterTracking: CGFloat = 1.8
-        static let underlineWidth: CGFloat = 20
-        static let underlineHeight: CGFloat = 1.5
+        static let stackSpacing: CGFloat = 7
+        static let letterTracking: CGFloat = 1.4
+        static let underlineWidth: CGFloat = 28
+        static let underlineHeight: CGFloat = 2
     }
 
     let phase: TimerState.Phase
+    @Environment(\.colorScheme) private var scheme
 
     public init(phase: TimerState.Phase) { self.phase = phase }
 
@@ -70,7 +71,7 @@ public struct PhaseLabel: View {
             Text(phase.name.uppercased())
                 .font(DesignSystem.Typography.phaseLabel())
                 .tracking(Constants.letterTracking)
-                .foregroundStyle(phase.color.opacity(DesignSystem.Opacity.phaseLabelColor))
+                .foregroundStyle(DesignSystem.Colors.secondaryText(for: scheme))
             Rectangle()
                 .fill(phase.color)
                 .frame(width: Constants.underlineWidth, height: Constants.underlineHeight)
@@ -84,6 +85,7 @@ public struct PhaseLabel: View {
 
 public struct TimeDisplay: View {
     let secondsRemaining: Int
+    @Environment(\.colorScheme) private var scheme
 
     public init(secondsRemaining: Int) { self.secondsRemaining = secondsRemaining }
 
@@ -91,6 +93,7 @@ public struct TimeDisplay: View {
         Text(formatted(secondsRemaining))
             .font(DesignSystem.Typography.timeDisplay())
             .monospacedDigit()
+            .foregroundStyle(DesignSystem.Colors.primaryText(for: scheme))
             .contentTransition(.numericText())
     }
 
@@ -134,15 +137,16 @@ extension View {
 
 public struct CadenceButton: View {
     private enum Constants {
-        static let horizontalPadding: CGFloat = 44
-        static let verticalPadding: CGFloat = 13
-        static let pressedScale: CGFloat = 0.97
+        static let horizontalPadding: CGFloat = 46
+        static let verticalPadding: CGFloat = 14
+        static let pressedScale: CGFloat = 0.96
     }
 
     let isRunning: Bool
     let phase: TimerState.Phase
     let action: () -> Void
     @State private var isPressed = false
+    @Environment(\.colorScheme) private var scheme
 
     public init(isRunning: Bool, phase: TimerState.Phase, action: @escaping () -> Void) {
         self.isRunning = isRunning
@@ -154,10 +158,14 @@ public struct CadenceButton: View {
         Button(action: action) {
             Text(isRunning ? "Pause" : "Start")
                 .font(DesignSystem.Typography.buttonLabel())
-                .foregroundStyle(phase.color)
+                .foregroundStyle(DesignSystem.Colors.controlForeground(for: phase, scheme: scheme))
                 .padding(.horizontal, Constants.horizontalPadding)
                 .padding(.vertical, Constants.verticalPadding)
-                .background(Capsule().fill(phase.color.opacity(DesignSystem.Opacity.buttonBackground)))
+                .background(
+                    Capsule()
+                        .fill(DesignSystem.Colors.controlSurface(for: phase, scheme: scheme))
+                        .shadow(color: phase.color.opacity(scheme == .light ? 0.24 : 0.30), radius: 18, y: 8)
+                )
         }
         .buttonStyle(.plain)
         .keyboardShortcut(.space, modifiers: [])
@@ -202,13 +210,31 @@ public struct TimelineSegment: View {
             : DesignSystem.Spacing.timelineHeightInactive
     }
 
+    private var trackColor: Color {
+        switch state {
+        case .active, .completed:
+            return phase.color.opacity(opacity)
+        case .upcoming:
+            return Color.primary.opacity(opacity)
+        }
+    }
+
+    private var segmentShape: UnevenRoundedRectangle {
+        UnevenRoundedRectangle(
+            topLeadingRadius: 1,
+            bottomLeadingRadius: 1,
+            bottomTrailingRadius: 1,
+            topTrailingRadius: 1
+        )
+    }
+
     public var body: some View {
         ZStack(alignment: .leading) {
-            Capsule()
-                .fill(phase.color.opacity(opacity))
+            segmentShape
+                .fill(trackColor)
                 .frame(width: width, height: height)
             if state == .active && progress > 0 {
-                Capsule()
+                segmentShape
                     .fill(Color.white.opacity(DesignSystem.Opacity.timelineProgress))
                     .frame(width: width * progress, height: height)
             }
@@ -261,4 +287,3 @@ public struct PhaseTimeline: View {
         .frame(height: DesignSystem.Spacing.timelineHitTargetHeight)
     }
 }
-

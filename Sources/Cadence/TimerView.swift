@@ -7,6 +7,7 @@ struct TimerView: View {
     @State private var completedActivity: Activity?
     @State private var completedPhase: TimerState.Phase?
     @State private var undoTask: Task<Void, Never>?
+    @Environment(\.colorScheme) private var scheme
 
     var body: some View {
         ZStack {
@@ -16,7 +17,7 @@ struct TimerView: View {
             // Header: phase label + current activity
             VStack {
                 HStack(alignment: .center) {
-                    VStack(alignment: .leading, spacing: 12) {
+                    VStack(alignment: .leading, spacing: 10) {
                         PhaseLabel(phase: timerState.currentPhase)
                         activityLabel
                     }
@@ -42,15 +43,16 @@ struct TimerView: View {
             // Controls
             VStack(spacing: 0) {
                 Spacer()
-                CadenceButton(
-                    isRunning: timerState.isRunning,
-                    phase: timerState.currentPhase
-                ) { timerState.toggle() }
-                .padding(.bottom, DesignSystem.Spacing.buttonBottom)
+                VStack(spacing: 14) {
+                    CadenceButton(
+                        isRunning: timerState.isRunning,
+                        phase: timerState.currentPhase
+                    ) { timerState.toggle() }
 
-                PhaseTimeline(timerState: timerState)
-                    .padding(.horizontal, DesignSystem.Spacing.timelineSideInset)
-                    .padding(.bottom, DesignSystem.Spacing.timelineBottom)
+                    PhaseTimeline(timerState: timerState)
+                        .padding(.horizontal, DesignSystem.Spacing.timelineSideInset)
+                }
+                .padding(.bottom, DesignSystem.Spacing.timelineBottom)
             }
         }
         .frame(
@@ -73,12 +75,12 @@ struct TimerView: View {
                 Text(completed.name)
                     .font(DesignSystem.Typography.activityLabel())
                     .strikethrough()
-                    .foregroundStyle(.primary.opacity(0.35))
+                    .foregroundStyle(DesignSystem.Colors.secondaryText(for: scheme).opacity(0.58))
                 Button("Undo") {
                     undoCompletion()
                 }
                 .font(DesignSystem.Typography.activityAction())
-                .foregroundStyle(timerState.currentPhase.color.opacity(0.7))
+                .foregroundStyle(timerState.currentPhase.color)
                 .buttonStyle(.plain)
             }
             .transition(.opacity)
@@ -87,7 +89,7 @@ struct TimerView: View {
             HStack(spacing: 8) {
                 Text(activity.name)
                     .font(DesignSystem.Typography.activityLabel())
-                    .foregroundStyle(.primary.opacity(0.55))
+                    .foregroundStyle(DesignSystem.Colors.secondaryText(for: scheme).opacity(DesignSystem.Opacity.textMuted))
                     .contentTransition(.opacity)
                     .onTapGesture {
                         withAnimation(DesignSystem.Animation.uiUpdate) {
