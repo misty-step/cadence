@@ -17,26 +17,26 @@ struct CadenceApp: App {
 @MainActor
 class AppDelegate: NSObject, NSApplicationDelegate {
     var windowManager: WindowManager<TimerView>?
-    let timerState: TimerState
-    let notificationManager: NotificationManager
+    var editorWindow: NSWindow?
+    let notificationManager = NotificationManager()
+    let activityStore = ActivityStore()
+    lazy var timerState = TimerState(notificationManager: notificationManager)
     var statusItem: NSStatusItem?
-
-    override init() {
-        let notificationManager = NotificationManager()
-        self.notificationManager = notificationManager
-        self.timerState = TimerState(notificationManager: notificationManager)
-        super.init()
-    }
+    private var lastPhase: TimerState.Phase?
+    private var lastIsRunning: Bool = false
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
         registerFonts()
         notificationManager.requestAuthorizationIfNeeded()
+
         windowManager = WindowManager(
             title: "Cadence",
             autosaveName: "CadenceMainWindow",
-            content: TimerView(timerState: timerState)
+            content: TimerView(timerState: timerState, activityStore: activityStore)
         )
+
+        lastPhase = timerState.currentPhase
         setupStatusBarItem()
         windowManager?.showWindow()
     }
@@ -46,7 +46,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         for name in fontNames {
             guard let url = Bundle.main.url(forResource: name, withExtension: "ttf") else {
                 #if DEBUG
-                assertionFailure("Missing font resource: \(name).ttf")
+                    assertionFailure("Missing font resource: \(name).ttf")
                 #endif
                 continue
             }
@@ -54,42 +54,44 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             var error: Unmanaged<CFError>?
             if !CTFontManagerRegisterFontsForURL(url as CFURL, .process, &error) {
                 #if DEBUG
-                let description = (error?.takeRetainedValue() as Error?)?.localizedDescription ?? "Unknown error"
-                assertionFailure("Font registration failed for \(name): \(description)")
+                    let description = (error?.takeRetainedValue() as Error?)?.localizedDescription
+                        ?? "Unknown error"
+                    assertionFailure("Font registration failed for \(name): \(description)")
                 #endif
             }
         }
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
-        return false
+        false
     }
+
+    // MARK: - Status Bar
 
     private func setupStatusBarItem() {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+        guard let button = statusItem?.button else { return }
+        updateStatusBarIcon()
+        button.action = #selector(statusBarClicked)
+        button.target = self
+        button.sendAction(on: [.leftMouseUp, .rightMouseUp])
 
-        if let button = statusItem?.button {
-            updateStatusBarIcon()
-            button.action = #selector(toggleWindow)
-            button.target = self
-            button.sendAction(on: [.leftMouseUp, .rightMouseUp])
-        }
-
-        // Use withObservationTracking to update status bar only when state changes
-        setupObservationTracking()
-    }
-
-    private func setupObservationTracking() {
-        var lastPhase: TimerState.Phase = timerState.currentPhase
-        var lastIsRunning: Bool = timerState.isRunning
-
-        // Periodically check for state changes and update status bar (more reliable than withObservationTracking)
         Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
             Task { @MainActor [weak self] in
-                guard let self = self else { return }
-                if self.timerState.currentPhase != lastPhase || self.timerState.isRunning != lastIsRunning {
-                    lastPhase = self.timerState.currentPhase
-                    lastIsRunning = self.timerState.isRunning
+                guard let self else { return }
+                let current = self.timerState.currentPhase
+                let running = self.timerState.isRunning
+
+                if current != self.lastPhase {
+                    if let old = self.lastPhase {
+                        self.activityStore.phaseCompleted(old)
+                    }
+                    self.activityStore.pickActivity(for: current)
+                    self.lastPhase = current
+                    self.lastIsRunning = running
+                    self.updateStatusBarIcon()
+                } else if running != self.lastIsRunning {
+                    self.lastIsRunning = running
                     self.updateStatusBarIcon()
                 }
             }
@@ -103,9 +105,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             isRunning: timerState.isRunning
         )
         button.image = icon.createNSImage()
+        button.title = ""
     }
 
-    @objc private func toggleWindow(_ sender: NSStatusBarButton) {
+    @objc private func statusBarClicked(_ sender: NSStatusBarButton) {
         guard let event = NSApp.currentEvent else {
             windowManager?.toggleWindow()
             return
@@ -118,15 +121,19 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
+    // MARK: - Context Menu
+
     private func showContextMenu() {
         let menu = NSMenu()
-        menu.addItem(NSMenuItem(title: "Show Timer", action: #selector(showTimer), keyEquivalent: ""))
+        menu.addItem(NSMenuItem(
+            title: "Show Timer", action: #selector(showTimer), keyEquivalent: ""))
+        menu.addItem(NSMenuItem(
+            title: "Edit Activities\u{2026}", action: #selector(showEditor), keyEquivalent: ","))
         menu.addItem(NSMenuItem.separator())
-        menu.addItem(NSMenuItem(title: "Quit Cadence", action: #selector(quitApp), keyEquivalent: "q"))
+        menu.addItem(NSMenuItem(
+            title: "Quit Cadence", action: #selector(quitApp), keyEquivalent: "q"))
 
-        for item in menu.items {
-            item.target = self
-        }
+        for item in menu.items { item.target = self }
 
         statusItem?.menu = menu
         statusItem?.button?.performClick(nil)
@@ -139,5 +146,35 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func quitApp() {
         NSApp.terminate(nil)
+    }
+
+    // MARK: - Activity Editor
+
+    @objc private func showEditor() {
+        if let existing = editorWindow, existing.isVisible {
+            existing.makeKeyAndOrderFront(nil)
+            NSApp.activate()
+            return
+        }
+
+        let editor = ActivityEditorView(store: activityStore)
+        let controller = NSHostingController(rootView: editor)
+
+        let window = NSWindow(
+            contentRect: NSRect(origin: .zero, size: NSSize(
+                width: DesignSystem.Spacing.editorWidth,
+                height: DesignSystem.Spacing.editorHeight
+            )),
+            styleMask: [.titled, .closable],
+            backing: .buffered,
+            defer: false
+        )
+        window.title = "Activities"
+        window.contentViewController = controller
+        window.center()
+        window.makeKeyAndOrderFront(nil)
+        NSApp.activate()
+
+        editorWindow = window
     }
 }

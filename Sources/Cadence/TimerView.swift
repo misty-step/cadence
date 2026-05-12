@@ -1,7 +1,7 @@
 import CadenceKit
 import SwiftUI
 
-struct TempoTimerView: View {
+struct TimerView: View {
     @Bindable var timerState: TimerState
     var activityStore: ActivityStore
     @State private var completedActivity: Activity?

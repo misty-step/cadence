@@ -8,8 +8,7 @@ let package = Package(
     ],
     products: [
         .library(name: "CadenceKit", targets: ["CadenceKit"]),
-        .executable(name: "Cadence", targets: ["Cadence"]),
-        .executable(name: "Tempo", targets: ["Tempo"])
+        .executable(name: "Cadence", targets: ["Cadence"])
     ],
     dependencies: [],
     targets: [
@@ -23,20 +22,10 @@ let package = Package(
             dependencies: ["CadenceKit"],
             path: "Sources/Cadence"
         ),
-        .executableTarget(
-            name: "Tempo",
-            dependencies: ["CadenceKit"],
-            path: "Sources/Tempo"
-        ),
         .testTarget(
             name: "CadenceKitTests",
             dependencies: ["CadenceKit"],
             path: "Tests/CadenceKitTests"
-        ),
-        .testTarget(
-            name: "TempoTests",
-            dependencies: ["CadenceKit"],
-            path: "Tests/TempoTests"
         )
     ]
 )
