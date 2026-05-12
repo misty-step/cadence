@@ -4,11 +4,13 @@ import SwiftUI
 
 // MARK: - Gradient Background
 
-struct GradientBackground: View {
+public struct GradientBackground: View {
     let phase: TimerState.Phase
     @Environment(\.colorScheme) var scheme
 
-    var body: some View {
+    public init(phase: TimerState.Phase) { self.phase = phase }
+
+    public var body: some View {
         DesignSystem.Gradients.background(for: phase, scheme: scheme)
             .ignoresSafeArea()
             .animation(DesignSystem.Animation.gradientTransition, value: phase)
@@ -17,7 +19,7 @@ struct GradientBackground: View {
 
 // MARK: - Grain Overlay
 
-struct GrainOverlay: View {
+public struct GrainOverlay: View {
     private enum Constants {
         static let width: CGFloat = 400
         static let height: CGFloat = 500
@@ -38,7 +40,9 @@ struct GrainOverlay: View {
         return NSImage(cgImage: cgImage, size: NSSize(width: Constants.width, height: Constants.height))
     }()
 
-    var body: some View {
+    public init() {}
+
+    public var body: some View {
         Image(nsImage: Self.noiseImage)
             .resizable()
             .opacity(DesignSystem.Opacity.grainOverlay)
@@ -49,7 +53,7 @@ struct GrainOverlay: View {
 
 // MARK: - Phase Label
 
-struct PhaseLabel: View {
+public struct PhaseLabel: View {
     private enum Constants {
         static let stackSpacing: CGFloat = 6
         static let letterTracking: CGFloat = 1.8
@@ -59,7 +63,9 @@ struct PhaseLabel: View {
 
     let phase: TimerState.Phase
 
-    var body: some View {
+    public init(phase: TimerState.Phase) { self.phase = phase }
+
+    public var body: some View {
         VStack(alignment: .leading, spacing: Constants.stackSpacing) {
             Text(phase.name.uppercased())
                 .font(DesignSystem.Typography.phaseLabel())
@@ -76,10 +82,12 @@ struct PhaseLabel: View {
 
 // MARK: - Time Display
 
-struct TimeDisplay: View {
+public struct TimeDisplay: View {
     let secondsRemaining: Int
 
-    var body: some View {
+    public init(secondsRemaining: Int) { self.secondsRemaining = secondsRemaining }
+
+    public var body: some View {
         Text(formatted(secondsRemaining))
             .font(DesignSystem.Typography.timeDisplay())
             .monospacedDigit()
@@ -94,12 +102,12 @@ struct TimeDisplay: View {
 
 // MARK: - Press Events Modifier
 
-struct PressEventsModifier: ViewModifier {
+public struct PressEventsModifier: ViewModifier {
     var onPress: () -> Void
     var onRelease: () -> Void
     @State private var pressing = false
 
-    func body(content: Content) -> some View {
+    public func body(content: Content) -> some View {
         content
             .simultaneousGesture(
                 DragGesture(minimumDistance: 0)
@@ -117,14 +125,14 @@ struct PressEventsModifier: ViewModifier {
 }
 
 extension View {
-    func pressEvents(onPress: @escaping () -> Void, onRelease: @escaping () -> Void) -> some View {
+    public func pressEvents(onPress: @escaping () -> Void, onRelease: @escaping () -> Void) -> some View {
         modifier(PressEventsModifier(onPress: onPress, onRelease: onRelease))
     }
 }
 
 // MARK: - Cadence Button
 
-struct CadenceButton: View {
+public struct CadenceButton: View {
     private enum Constants {
         static let horizontalPadding: CGFloat = 44
         static let verticalPadding: CGFloat = 13
@@ -136,7 +144,13 @@ struct CadenceButton: View {
     let action: () -> Void
     @State private var isPressed = false
 
-    var body: some View {
+    public init(isRunning: Bool, phase: TimerState.Phase, action: @escaping () -> Void) {
+        self.isRunning = isRunning
+        self.phase = phase
+        self.action = action
+    }
+
+    public var body: some View {
         Button(action: action) {
             Text(isRunning ? "Pause" : "Start")
                 .font(DesignSystem.Typography.buttonLabel())
@@ -159,13 +173,20 @@ struct CadenceButton: View {
 
 // MARK: - Timeline Segment
 
-struct TimelineSegment: View {
-    enum SegmentState { case active, completed, upcoming }
+public struct TimelineSegment: View {
+    public enum SegmentState { case active, completed, upcoming }
 
     let phase: TimerState.Phase
     let state: SegmentState
     let progress: Double
     let width: CGFloat
+
+    public init(phase: TimerState.Phase, state: SegmentState, progress: Double, width: CGFloat) {
+        self.phase = phase
+        self.state = state
+        self.progress = progress
+        self.width = width
+    }
 
     private var opacity: Double {
         switch state {
@@ -181,7 +202,7 @@ struct TimelineSegment: View {
             : DesignSystem.Spacing.timelineHeightInactive
     }
 
-    var body: some View {
+    public var body: some View {
         ZStack(alignment: .leading) {
             Capsule()
                 .fill(phase.color.opacity(opacity))
@@ -192,7 +213,6 @@ struct TimelineSegment: View {
                     .frame(width: width * progress, height: height)
             }
         }
-        // Frame expands hit target to 24pt without affecting the 5pt/2pt visual bar height inside.
         .frame(width: width, height: DesignSystem.Spacing.timelineHitTargetHeight, alignment: .center)
         .contentShape(Rectangle())
         .animation(DesignSystem.Animation.timelineHover, value: state)
@@ -201,10 +221,12 @@ struct TimelineSegment: View {
 
 // MARK: - Phase Timeline
 
-struct PhaseTimeline: View {
+public struct PhaseTimeline: View {
     @Bindable var timerState: TimerState
 
-    var body: some View {
+    public init(timerState: TimerState) { self.timerState = timerState }
+
+    public var body: some View {
         GeometryReader { geo in
             let segments = timerState.cycleSegments
             let durations = segments.map { CGFloat($0.phase.duration) }
@@ -242,10 +264,12 @@ struct PhaseTimeline: View {
 
 // MARK: - Timer View
 
-struct TimerView: View {
+public struct TimerView: View {
     @Bindable var timerState: TimerState
 
-    var body: some View {
+    public init(timerState: TimerState) { self.timerState = timerState }
+
+    public var body: some View {
         ZStack {
             GradientBackground(phase: timerState.currentPhase)
             GrainOverlay()

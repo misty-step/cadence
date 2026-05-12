@@ -1,21 +1,17 @@
 #!/bin/bash
-# Build and run debug version as app bundle for testing
+# Build and run Tempo debug version as app bundle for testing
 set -e
 
-if command -v swiftlint &>/dev/null; then
-  swiftlint lint --quiet || true
-fi
-
-swift build
+swift build --product Tempo
 
 # Create minimal app bundle structure for debug
-DEBUG_APP=".build/debug/Cadence-Dev.app"
+DEBUG_APP=".build/debug/Tempo-Dev.app"
 rm -rf "$DEBUG_APP"
 mkdir -p "$DEBUG_APP/Contents/MacOS"
 mkdir -p "$DEBUG_APP/Contents/Resources"
 
 # Copy binary
-cp .build/debug/Cadence "$DEBUG_APP/Contents/MacOS/"
+cp .build/debug/Tempo "$DEBUG_APP/Contents/MacOS/"
 
 # Copy SPM resources bundle (fonts, etc.) — SPM puts resources flat in bundle root
 RESOURCES_BUNDLE=".build/debug/Cadence_CadenceKit.bundle"
@@ -32,11 +28,11 @@ cat > "$DEBUG_APP/Contents/Info.plist" << 'EOF'
 <plist version="1.0">
 <dict>
     <key>CFBundleExecutable</key>
-    <string>Cadence</string>
+    <string>Tempo</string>
     <key>CFBundleIdentifier</key>
-    <string>dev.mistystep.cadence.debug</string>
+    <string>dev.mistystep.tempo.debug</string>
     <key>CFBundleName</key>
-    <string>Cadence-Dev</string>
+    <string>Tempo-Dev</string>
     <key>LSUIElement</key>
     <true/>
 </dict>
@@ -44,9 +40,9 @@ cat > "$DEBUG_APP/Contents/Info.plist" << 'EOF'
 EOF
 
 # Kill existing and launch
-pkill -x Cadence 2>/dev/null || true
-pkill -x Cadence-Dev 2>/dev/null || true
+pkill -x Tempo 2>/dev/null || true
+pkill -x Tempo-Dev 2>/dev/null || true
 sleep 0.5
 
-echo "Launching debug app..."
+echo "Launching Tempo debug app..."
 open "$DEBUG_APP"

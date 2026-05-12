@@ -5,13 +5,13 @@ import SwiftUI
 
 @MainActor
 @Observable
-final class TimerState {
-    enum Phase {
+public final class TimerState {
+    public enum Phase: Sendable {
         case focus
         case shortBreak
         case longBreak
 
-        var name: String {
+        public var name: String {
             switch self {
             case .focus: return "Focus"
             case .shortBreak: return "Short Break"
@@ -19,7 +19,7 @@ final class TimerState {
             }
         }
 
-        var duration: Int {
+        public var duration: Int {
             switch self {
             case .focus: return 25 * 60
             case .shortBreak: return 5 * 60
@@ -27,14 +27,14 @@ final class TimerState {
             }
         }
 
-        var isFocus: Bool {
+        public var isFocus: Bool {
             switch self {
             case .focus: return true
             case .shortBreak, .longBreak: return false
             }
         }
 
-        var sfSymbol: String {
+        public var sfSymbol: String {
             switch self {
             case .focus: return "circle.fill"
             case .shortBreak: return "circle.bottomhalf.filled"
@@ -42,7 +42,7 @@ final class TimerState {
             }
         }
 
-        var color: Color {
+        public var color: Color {
             switch self {
             case .focus: return DesignSystem.Colors.focus
             case .shortBreak: return DesignSystem.Colors.shortBreak
@@ -50,7 +50,7 @@ final class TimerState {
             }
         }
 
-        var nsColor: NSColor {
+        public var nsColor: NSColor {
             switch self {
             case .focus: return NSColor(red: 1.0, green: 0.58, blue: 0.0, alpha: 1.0)
             case .shortBreak: return NSColor(red: 0.19, green: 0.84, blue: 0.78, alpha: 1.0)
@@ -58,7 +58,7 @@ final class TimerState {
             }
         }
 
-        var notificationBody: String {
+        public var notificationBody: String {
             switch self {
             case .focus: return "Time to focus."
             case .shortBreak: return "Quick break. Stretch."
@@ -66,7 +66,7 @@ final class TimerState {
             }
         }
 
-        var systemSound: String {
+        public var systemSound: String {
             switch self {
             case .focus: return "Ping"
             case .shortBreak: return "Glass"
@@ -75,19 +75,19 @@ final class TimerState {
         }
     }
 
-    var currentPhase: Phase = .focus
-    var secondsRemaining: Int = Phase.focus.duration
-    var isRunning: Bool = false
-    var completedFocusSessions: Int = 0
-    var displayCompletedSessions: Int {
+    public var currentPhase: Phase = .focus
+    public var secondsRemaining: Int = Phase.focus.duration
+    public var isRunning: Bool = false
+    public var completedFocusSessions: Int = 0
+    public var displayCompletedSessions: Int {
         if currentPhase == .longBreak {
             return 4
         }
         return completedFocusSessions
     }
 
-    var totalSeconds: Int { currentPhase.duration }
-    var progress: Double {
+    public var totalSeconds: Int { currentPhase.duration }
+    public var progress: Double {
         let elapsed = totalSeconds - secondsRemaining
         if totalSeconds == 0 { return 0 }
         return min(max(Double(elapsed) / Double(totalSeconds), 0), 1)
@@ -111,7 +111,7 @@ final class TimerState {
         .init(phase: .longBreak, completedFocusSessions: 0)
     ]
 
-    var cycleIndex: Int {
+    public var cycleIndex: Int {
         let maxIndex = Self.cycleMap.count - 1
         switch currentPhase {
         case .longBreak:
@@ -125,7 +125,7 @@ final class TimerState {
         }
     }
 
-    func jumpToPhase(_ index: Int) {
+    public func jumpToPhase(_ index: Int) {
         guard Self.cycleMap.indices.contains(index) else { return }
         pause()
         let step = Self.cycleMap[index]
@@ -134,20 +134,20 @@ final class TimerState {
         secondsRemaining = step.phase.duration
     }
 
-    func resetCurrentPhase() {
+    public func resetCurrentPhase() {
         pause()
         secondsRemaining = currentPhase.duration
     }
 
-    struct CycleSegment: Sendable {
-        let phase: Phase
-        let cycleIndex: Int
-        var isActive: Bool
-        var isCompleted: Bool
-        var progressFraction: Double
+    public struct CycleSegment: Sendable {
+        public let phase: Phase
+        public let cycleIndex: Int
+        public var isActive: Bool
+        public var isCompleted: Bool
+        public var progressFraction: Double
     }
 
-    var cycleSegments: [CycleSegment] {
+    public var cycleSegments: [CycleSegment] {
         let current = cycleIndex
         return Self.cycleMap.enumerated().map { idx, entry in
             CycleSegment(
@@ -163,16 +163,16 @@ final class TimerState {
     private var backgroundTimer: Timer?
     private let notificationManager: NotificationManager
 
-    init(notificationManager: NotificationManager = NotificationManager()) {
+    public init(notificationManager: NotificationManager = NotificationManager()) {
         self.notificationManager = notificationManager
     }
 
-    func start() {
+    public func start() {
         isRunning = true
         startBackgroundTimer()
     }
 
-    func pause() {
+    public func pause() {
         isRunning = false
         stopBackgroundTimer()
     }
@@ -192,7 +192,7 @@ final class TimerState {
         backgroundTimer = nil
     }
 
-    func toggle() {
+    public func toggle() {
         if isRunning {
             pause()
         } else {
@@ -200,7 +200,7 @@ final class TimerState {
         }
     }
 
-    func reset() {
+    public func reset() {
         stopBackgroundTimer()
         isRunning = false
         currentPhase = .focus
@@ -209,13 +209,13 @@ final class TimerState {
     }
 
     #if DEBUG
-    func skipPhase(notificationManager: NotificationManager) {
+    public func skipPhase(notificationManager: NotificationManager) {
         secondsRemaining = 0
         advancePhase(notificationManager: notificationManager)
     }
     #endif
 
-    func tick(notificationManager: NotificationManager) {
+    public func tick(notificationManager: NotificationManager) {
         guard isRunning else { return }
         if secondsRemaining > 0 {
             secondsRemaining -= 1
