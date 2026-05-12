@@ -1,39 +1,38 @@
-import CadenceKit
 import Foundation
 import Observation
 import os
 
 @MainActor
 @Observable
-final class ActivityStore {
+public final class ActivityStore {
     private static let logger = Logger(subsystem: "com.cadence.tempo", category: "ActivityStore")
 
-    var focusActivities: [Activity] = []
-    var breakActivities: [Activity] = []
+    public var focusActivities: [Activity] = []
+    public var breakActivities: [Activity] = []
     private let storageURL: URL
 
-    init(storageURL: URL? = nil) {
+    public init(storageURL: URL? = nil) {
         self.storageURL = storageURL ?? Self.defaultFileURL
         load()
     }
 
     // MARK: - Current Activity
 
-    private(set) var currentFocusActivity: Activity?
-    private(set) var currentBreakActivity: Activity?
+    public private(set) var currentFocusActivity: Activity?
+    public private(set) var currentBreakActivity: Activity?
 
-    func currentActivity(for phase: TimerState.Phase) -> Activity? {
+    public func currentActivity(for phase: TimerState.Phase) -> Activity? {
         phase.isFocus ? currentFocusActivity : currentBreakActivity
     }
 
     // MARK: - Phase Transitions
 
-    func phaseCompleted(_ phase: TimerState.Phase) {
+    public func phaseCompleted(_ phase: TimerState.Phase) {
         // One-offs survive phase transitions — require explicit completion
         save()
     }
 
-    func completeCurrentActivity(for phase: TimerState.Phase) {
+    public func completeCurrentActivity(for phase: TimerState.Phase) {
         if phase.isFocus, let done = currentFocusActivity, !done.isRecurring {
             focusActivities.removeAll { $0.id == done.id }
             save()
@@ -44,7 +43,7 @@ final class ActivityStore {
         pickActivity(for: phase)
     }
 
-    func pickActivity(for phase: TimerState.Phase) {
+    public func pickActivity(for phase: TimerState.Phase) {
         if phase.isFocus {
             currentFocusActivity = focusActivities.randomElement()
         } else {
@@ -54,7 +53,7 @@ final class ActivityStore {
 
     // MARK: - Mutations
 
-    func addFocusActivity(_ name: String, recurring: Bool = true) {
+    public func addFocusActivity(_ name: String, recurring: Bool = true) {
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
         let activity = Activity(name: trimmed, isRecurring: recurring)
@@ -65,7 +64,7 @@ final class ActivityStore {
         save()
     }
 
-    func addBreakActivity(_ name: String, recurring: Bool = true) {
+    public func addBreakActivity(_ name: String, recurring: Bool = true) {
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
         let activity = Activity(name: trimmed, isRecurring: recurring)
@@ -76,7 +75,7 @@ final class ActivityStore {
         save()
     }
 
-    func removeActivity(_ activity: Activity) {
+    public func removeActivity(_ activity: Activity) {
         let removedFocus = currentFocusActivity?.id == activity.id
         let removedBreak = currentBreakActivity?.id == activity.id
         focusActivities.removeAll { $0.id == activity.id }
@@ -90,7 +89,7 @@ final class ActivityStore {
         save()
     }
 
-    func toggleRecurring(_ activity: Activity) {
+    public func toggleRecurring(_ activity: Activity) {
         if let idx = focusActivities.firstIndex(where: { $0.id == activity.id }) {
             focusActivities[idx].isRecurring.toggle()
             if currentFocusActivity?.id == activity.id {
@@ -105,12 +104,12 @@ final class ActivityStore {
         save()
     }
 
-    func moveFocusActivity(from source: IndexSet, to destination: Int) {
+    public func moveFocusActivity(from source: IndexSet, to destination: Int) {
         focusActivities.move(fromOffsets: source, toOffset: destination)
         save()
     }
 
-    func moveBreakActivity(from source: IndexSet, to destination: Int) {
+    public func moveBreakActivity(from source: IndexSet, to destination: Int) {
         breakActivities.move(fromOffsets: source, toOffset: destination)
         save()
     }

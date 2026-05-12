@@ -1,8 +1,7 @@
-import CadenceKit
 import Foundation
 import Testing
 
-@testable import Tempo
+@testable import CadenceKit
 
 @MainActor
 @Suite("ActivityStore")

@@ -35,7 +35,7 @@ let package = Package(
         ),
         .testTarget(
             name: "TempoTests",
-            dependencies: ["Tempo"],
+            dependencies: ["CadenceKit"],
             path: "Tests/TempoTests"
         )
     ]
