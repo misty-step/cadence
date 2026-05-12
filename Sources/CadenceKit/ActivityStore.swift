@@ -122,7 +122,7 @@ public final class ActivityStore {
         ).first else {
             fatalError("Could not locate Application Support directory.")
         }
-        let dir = appSupport.appendingPathComponent("Tempo", isDirectory: true)
+        let dir = appSupport.appendingPathComponent("Cadence", isDirectory: true)
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         return dir.appendingPathComponent("activities.json")
     }
