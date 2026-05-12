@@ -75,6 +75,8 @@ struct TimerView: View {
                 Text(completed.name)
                     .font(DesignSystem.Typography.activityLabel())
                     .strikethrough()
+                    .lineLimit(1)
+                    .truncationMode(.tail)
                     .foregroundStyle(DesignSystem.Colors.secondaryText(for: scheme).opacity(0.58))
                 Button("Undo") {
                     undoCompletion()
@@ -89,6 +91,8 @@ struct TimerView: View {
             HStack(spacing: 8) {
                 Text(activity.name)
                     .font(DesignSystem.Typography.activityLabel())
+                    .lineLimit(1)
+                    .truncationMode(.tail)
                     .foregroundStyle(DesignSystem.Colors.secondaryText(for: scheme).opacity(DesignSystem.Opacity.textMuted))
                     .contentTransition(.opacity)
                     .onTapGesture {

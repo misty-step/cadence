@@ -139,6 +139,8 @@ public struct CadenceButton: View {
     private enum Constants {
         static let horizontalPadding: CGFloat = 46
         static let verticalPadding: CGFloat = 14
+        static let labelSpacing: CGFloat = 8
+        static let symbolSize: CGFloat = 10
         static let pressedScale: CGFloat = 0.96
     }
 
@@ -156,21 +158,29 @@ public struct CadenceButton: View {
 
     public var body: some View {
         Button(action: action) {
-            Text(isRunning ? "Pause" : "Start")
-                .font(DesignSystem.Typography.buttonLabel())
-                .foregroundStyle(DesignSystem.Colors.controlForeground(for: phase, scheme: scheme))
-                .padding(.horizontal, Constants.horizontalPadding)
-                .padding(.vertical, Constants.verticalPadding)
-                .background(
-                    Capsule()
-                        .fill(DesignSystem.Colors.controlSurface(for: phase, scheme: scheme))
-                        .shadow(color: phase.color.opacity(scheme == .light ? 0.24 : 0.30), radius: 18, y: 8)
-                )
+            HStack(spacing: Constants.labelSpacing) {
+                Image(systemName: isRunning ? "pause.fill" : "play.fill")
+                    .font(.system(size: Constants.symbolSize, weight: .semibold))
+                    .contentTransition(.symbolEffect(.replace))
+                    .offset(x: isRunning ? 0 : 1)
+                Text(isRunning ? "Pause" : "Start")
+                    .font(DesignSystem.Typography.buttonLabel())
+                    .contentTransition(.opacity)
+            }
+            .foregroundStyle(DesignSystem.Colors.controlForeground(for: phase, scheme: scheme))
+            .padding(.horizontal, Constants.horizontalPadding)
+            .padding(.vertical, Constants.verticalPadding)
+            .background(
+                Capsule()
+                    .fill(DesignSystem.Colors.controlSurface(for: phase, scheme: scheme))
+                    .shadow(color: phase.color.opacity(scheme == .light ? 0.24 : 0.30), radius: 18, y: 8)
+            )
         }
         .buttonStyle(.plain)
         .keyboardShortcut(.space, modifiers: [])
         .scaleEffect(isPressed ? Constants.pressedScale : 1.0)
         .animation(DesignSystem.Animation.buttonPress, value: isPressed)
+        .animation(DesignSystem.Animation.uiUpdate, value: isRunning)
         .pressEvents {
             isPressed = true
         } onRelease: {
@@ -212,10 +222,32 @@ public struct TimelineSegment: View {
 
     private var trackColor: Color {
         switch state {
-        case .active, .completed:
+        case .completed:
             return phase.color.opacity(opacity)
+        case .active:
+            return Color.primary.opacity(DesignSystem.Opacity.timelineUpcoming)
         case .upcoming:
             return Color.primary.opacity(opacity)
+        }
+    }
+
+    private var progressWidth: CGFloat {
+        switch state {
+        case .active:
+            return width * progress
+        case .completed:
+            return width
+        case .upcoming:
+            return 0
+        }
+    }
+
+    private var showsProgressIndicator: Bool {
+        switch state {
+        case .active:
+            return true
+        case .completed, .upcoming:
+            return false
         }
     }
 
@@ -233,15 +265,21 @@ public struct TimelineSegment: View {
             segmentShape
                 .fill(trackColor)
                 .frame(width: width, height: height)
-            if state == .active && progress > 0 {
+            if state == .active && progressWidth > 0 {
                 segmentShape
-                    .fill(Color.white.opacity(DesignSystem.Opacity.timelineProgress))
-                    .frame(width: width * progress, height: height)
+                    .fill(phase.color.opacity(DesignSystem.Opacity.timelineProgress))
+                    .frame(width: progressWidth, height: height)
+            }
+            if showsProgressIndicator {
+                segmentShape
+                    .fill(phase.color)
+                    .frame(width: 3, height: height)
             }
         }
         .frame(width: width, height: DesignSystem.Spacing.timelineHitTargetHeight, alignment: .center)
         .contentShape(Rectangle())
         .animation(DesignSystem.Animation.timelineHover, value: state)
+        .animation(.linear(duration: 0.2), value: progress)
     }
 }
 
