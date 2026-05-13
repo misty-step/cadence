@@ -143,7 +143,7 @@ public enum DesignSystem {
         public static let timelineActive: Double = 1.0
         public static let timelineCompleted: Double = 0.46
         public static let timelineUpcoming: Double = 0.18
-        public static let timelineProgress: Double = 0.28
+        public static let timelineProgress: Double = 1.0
         public static let underlineAccent: Double = 0.8
     }
 
