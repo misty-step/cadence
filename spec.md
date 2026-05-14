@@ -40,7 +40,7 @@ These values are not configurable. They're correct.
 - Native macOS APIs (no Electron)
 - Lightweight (~5MB)
 - Fast launch, minimal memory footprint
-- Runs in menu bar, not dock
+- Appears in Dock and Command-Tab, with a menu bar control for quick access
 
 ## The Loop
 
@@ -61,7 +61,7 @@ Session 4: Focus (25) → Long Break (15)
 
 ## UI Concept
 
-**Menu bar icon:** Simple circle that fills as the timer progresses. Red during focus, green during break.
+**Menu bar icon:** Simple circle that reflects the current timer phase and running state.
 
 **Click to expand:** Shows current phase, time remaining, and a single Start/Pause button.
 

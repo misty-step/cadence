@@ -9,6 +9,7 @@ PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 BUILD_DIR="$PROJECT_DIR/.build/release"
 APP_NAME="Cadence"
 APP_BUNDLE="$PROJECT_DIR/$APP_NAME.app"
+ICON_FILE="$APP_BUNDLE/Contents/Resources/Cadence.icns"
 
 # Create Info.plist in a temp location
 TEMP_PLIST="/tmp/Cadence_Info.plist"
@@ -29,10 +30,10 @@ cat > "$TEMP_PLIST" << 'EOF'
     <string>1.0</string>
     <key>CFBundleExecutable</key>
     <string>Cadence</string>
+    <key>CFBundleIconFile</key>
+    <string>Cadence</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
-    <key>LSUIElement</key>
-    <true/>
     <key>LSMinimumSystemVersion</key>
     <string>14.0</string>
     <key>NSHighResolutionCapable</key>
@@ -64,6 +65,8 @@ if [ -d "$RESOURCES_BUNDLE" ]; then
         cp "$f" "$APP_BUNDLE/Contents/Resources/"
     done
 fi
+
+python3 "$SCRIPT_DIR/generate-icon.py" "$ICON_FILE"
 
 # Copy Info.plist to bundle as well (for app discovery)
 cp "$TEMP_PLIST" "$APP_BUNDLE/Contents/Info.plist"
