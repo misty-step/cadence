@@ -6,6 +6,7 @@ A native macOS Pomodoro timer. Stays on your desktop, out of the way.
 - 5 minute short breaks (15 min after 4 sessions)
 - Space to start/pause
 - Menu bar icon to show/hide
+- Dock and Command-Tab access
 
 No settings. No accounts. Just a timer.
 

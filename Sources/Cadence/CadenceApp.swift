@@ -26,7 +26,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var lastIsRunning: Bool = false
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        NSApp.setActivationPolicy(.accessory)
+        NSApp.setActivationPolicy(.regular)
         registerFonts()
         notificationManager.requestAuthorizationIfNeeded()
 

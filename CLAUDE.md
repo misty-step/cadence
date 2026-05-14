@@ -49,7 +49,7 @@ See [docs/CODEBASE_MAP.md](docs/CODEBASE_MAP.md) for full architecture.
 - **SPM executable, not Xcode project.** Build with `swift build`, not Xcode. App bundle constructed manually by `scripts/bundle.sh` with embedded Info.plist via linker flags.
 - **`@Observable`, not `ObservableObject`.** Uses Swift Observation framework. Views use `@Bindable`, not `@ObservedObject`.
 - **Timer durations are intentionally hardcoded.** 25/5/15 minutes. Not configurable by design (see spec.md).
-- **LSUIElement = true.** No dock icon. Menu bar + floating window only.
+- **Regular macOS app.** Cadence appears in Dock and Command-Tab, with a menu bar item for quick window access.
 - **Ad-hoc code signing.** No developer certificate. `codesign --sign -`.
 - **`NotificationManager()` created per tick.** `startBackgroundTimer` creates a new instance each second instead of using the shared one. Functional but wasteful.
 - **Status bar polls at 0.5s** instead of using `withObservationTracking`.

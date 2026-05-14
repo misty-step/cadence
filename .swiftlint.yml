@@ -1,6 +1,9 @@
 disabled_rules:
   - todo
 
+excluded:
+  - .build
+
 opt_in_rules:
   - force_unwrapping
   - explicit_init

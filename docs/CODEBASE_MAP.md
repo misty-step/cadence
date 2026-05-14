@@ -82,7 +82,7 @@ cadence/
 
 **Purpose**: App entry point + menu bar icon rendering.
 
-**AppDelegate**: Sets `.accessory` activation policy (no dock icon). Creates `WindowManager`, `NotificationManager`, `TimerState`. Sets up `NSStatusItem` with left-click (toggle window) and right-click (context menu: Show Timer, Quit).
+**AppDelegate**: Sets `.regular` activation policy so Cadence appears in Dock and Command-Tab. Creates `WindowManager`, `NotificationManager`, `TimerState`. Sets up `NSStatusItem` with left-click (toggle window) and right-click (context menu: Show Timer, Quit).
 
 **MenuBarIconImage**: Renders 6 distinct NSImage states based on (phase, isRunning) — filled circle, stroked circle, half-filled, dashed, etc. Uses `NSBezierPath` drawing, marked as template image.
 
@@ -129,7 +129,7 @@ cadence/
 
 3. **SPM executable, not Xcode project**: Build via `swift build` or `scripts/bundle.sh`, not Xcode. The `.app` bundle is constructed manually with embedded `Info.plist` via linker flags (`-sectcreate __TEXT __info_plist`).
 
-4. **LSUIElement = true**: App has no dock icon. Only visible via menu bar and floating window.
+4. **Regular app identity**: App appears in Dock and Command-Tab. The menu bar item remains a quick way to show or hide the timer window.
 
 5. **Ad-hoc code signing**: No developer certificate. Uses `codesign --sign -` which limits distribution (no notarization, no App Store).
 

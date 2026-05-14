@@ -25,6 +25,8 @@ if [ -d "$RESOURCES_BUNDLE" ]; then
     done
 fi
 
+python3 "$(dirname "$0")/generate-icon.py" "$DEBUG_APP/Contents/Resources/Cadence.icns"
+
 # Create Info.plist
 cat > "$DEBUG_APP/Contents/Info.plist" << 'EOF'
 <?xml version="1.0" encoding="UTF-8"?>
@@ -37,8 +39,8 @@ cat > "$DEBUG_APP/Contents/Info.plist" << 'EOF'
     <string>dev.mistystep.cadence.debug</string>
     <key>CFBundleName</key>
     <string>Cadence-Dev</string>
-    <key>LSUIElement</key>
-    <true/>
+    <key>CFBundleIconFile</key>
+    <string>Cadence</string>
 </dict>
 </plist>
 EOF
